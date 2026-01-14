@@ -1,14 +1,17 @@
 package com.tuapp.calculadora
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 
 class BovedaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_boveda)
-
-        // Aquí podrías agregar un botón para "Importar Fotos" más adelante
+        
+        val vistaSecreta = TextView(this)
+        vistaSecreta.text = "¡Bóveda Abierta! Aquí irán tus fotos."
+        vistaSecreta.textSize = 24f
+        vistaSecreta.setTextColor(android.graphics.Color.WHITE)
+        setContentView(vistaSecreta)
     }
 }
