@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4 # Actualizado a v4
+    - uses: actions/checkout@v4
     - name: set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -14,9 +14,16 @@ jobs:
         distribution: 'temurin'
 
     - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2 # Esto ayuda con la compatibilidad de Gradle 9
+      uses: gradle/gradle-build-action@v2
       with:
-        gradle-version: 8.5 # Forzamos a que use la 8.5 que es más estable para Android
+        gradle-version: 8.5
 
     - name: Build with Gradle
       run: gradle assembleDebug
+
+    # ESTO SUBE EL APK PARA QUE LO DESCARGUES
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: calculadora-secreta
+        path: app/build/outputs/apk/debug/app-debug.apk
