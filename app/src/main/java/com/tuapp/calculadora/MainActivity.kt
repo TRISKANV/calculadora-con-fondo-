@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
 
         val tvDisplay = findViewById<TextView>(R.id.tvDisplay)
         val btnIgual = findViewById<Button>(R.id.btnIgual)
+        val btnBorrar = findViewById<Button>(R.id.btnBorrar)
         
         // 1. Revisar si ya existe una clave guardada
         val prefs = getSharedPreferences("BovedaPrefs", Context.MODE_PRIVATE)
@@ -27,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         if (claveGuardada == null) {
             modoRegistro = true
             tvDisplay.text = "Crea tu PIN"
-            tvDisplay.textSize = 40f // Un poco más pequeño para que quepa el texto
+            tvDisplay.textSize = 30f // Corregido: solo número + f
         }
 
         // 2. Configurar botones numéricos (0-9)
@@ -38,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         botonesIds.forEach { id ->
             findViewById<Button>(id).setOnClickListener {
-                if (inputActual.length < 4) { // Limitamos a 4 dígitos
+                if (inputActual.length < 4) {
                     val boton = it as Button
                     inputActual += boton.text.toString()
                     tvDisplay.text = inputActual
@@ -46,15 +47,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 3. Lógica del botón IGUAL
+        // 3. Lógica del botón AC (Borrar)
+        btnBorrar.setOnClickListener {
+            inputActual = ""
+            tvDisplay.text = if (modoRegistro) "Crea tu PIN" else "0"
+        }
+
+        // 4. Lógica del botón IGUAL
         btnIgual.setOnClickListener {
             if (modoRegistro) {
                 if (inputActual.length == 4) {
-                    // Guardar la nueva clave
                     prefs.edit().putString("clave_secreta", inputActual).apply()
                     Toast.makeText(this, "PIN Guardado. Ingrésalo ahora.", Toast.LENGTH_SHORT).show()
-                    
-                    // Reiniciar para que ahora entre en modo normal
                     modoRegistro = false
                     inputActual = ""
                     tvDisplay.text = "0"
@@ -62,14 +66,12 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "El PIN debe ser de 4 dígitos", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                // Modo normal: Comprobar clave para entrar a la bóveda
                 if (inputActual == claveGuardada) {
                     val intent = Intent(this, BovedaActivity::class.java)
                     startActivity(intent)
                     inputActual = ""
                     tvDisplay.text = "0"
                 } else {
-                    // Si falla, actúa como calculadora (limpia pantalla)
                     inputActual = ""
                     tvDisplay.text = "0"
                     Toast.makeText(this, "PIN Incorrecto", Toast.LENGTH_SHORT).show()
