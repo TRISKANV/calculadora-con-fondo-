@@ -1,6 +1,7 @@
 package com.tuapp.calculadora
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -19,8 +20,15 @@ class FotoAdapter(private val context: Context, private val listaFotos: List<Fil
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_foto, parent, false)
         val imageView = view.findViewById<ImageView>(R.id.ivItemFoto)
         
-        // Cargamos la imagen desde el archivo privado
-        imageView.setImageURI(Uri.fromFile(listaFotos[position]))
+        val archivo = listaFotos[position]
+        imageView.setImageURI(Uri.fromFile(archivo))
+
+        // Al tocar la foto, enviamos la ruta a VisorActivity
+        imageView.setOnClickListener {
+            val intent = Intent(context, VisorActivity::class.java)
+            intent.putExtra("ruta_imagen", archivo.absolutePath)
+            context.startActivity(intent)
+        }
         
         return view
     }
