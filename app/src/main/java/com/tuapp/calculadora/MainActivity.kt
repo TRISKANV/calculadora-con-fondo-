@@ -11,10 +11,9 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     private var inputActual = ""
-    private var modoRegistro = false
     private var primerNumero = 0.0
-    private var operacion = ""
-    private var nuevaOperacion = true
+    private var operacionActual = ""
+    private var modoRegistro = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,78 +24,73 @@ class MainActivity : AppCompatActivity() {
         val btnBorrar = findViewById<Button>(R.id.btnBorrar)
         
         val prefs = getSharedPreferences("BovedaPrefs", Context.MODE_PRIVATE)
-        var claveGuardada = prefs.getString("clave_secreta", null)
 
-        if (claveGuardada == null) {
-            modoRegistro = true
-            tvDisplay.text = "Crea tu PIN"
-            tvDisplay.textSize = 30f
-        }
-
-        // 1. Números (0-9)
+        // 1. Botones numéricos
         val botonesIds = listOf(
             R.id.btn0, R.id.btn1, R.id.btn2, R.id.btn3, R.id.btn4,
             R.id.btn5, R.id.btn6, R.id.btn7, R.id.btn8, R.id.btn9
         )
-
         botonesIds.forEach { id ->
             findViewById<Button>(id).setOnClickListener {
-                if (nuevaOperacion) {
-                    inputActual = ""
-                    nuevaOperacion = false
-                }
                 val boton = it as Button
                 inputActual += boton.text.toString()
                 tvDisplay.text = inputActual
             }
         }
 
-        // 2. Operaciones Matemáticas (Se activan si NO estamos creando un PIN)
-        val operacionesIds = mapOf(
-            "+" to "sumar", "-" to "restar", "×" to "multiplicar", "÷" to "dividir"
-        )
-        
-        // Como los botones de operación no tienen ID en el XML que te pasé, 
-        // los buscamos por su texto (asumiendo que los botones naranja están ahí)
-        // Nota: En el XML les pondremos IDs o los buscaremos por su lógica
-        
-        // 3. Lógica del botón AC (Borrar todo)
+        // 2. Botones de operación
+        val opBotones = listOf(R.id.btnSuma, R.id.btnResta, R.id.btnMulti, R.id.btnDiv)
+        opBotones.forEach { id ->
+            findViewById<Button>(id).setOnClickListener {
+                val boton = it as Button
+                if (inputActual.isNotEmpty()) {
+                    primerNumero = inputActual.toDouble()
+                    operacionActual = boton.text.toString()
+                    inputActual = ""
+                    tvDisplay.text = "0"
+                }
+            }
+        }
+
+        // 3. Botón Borrar (AC)
         btnBorrar.setOnClickListener {
             inputActual = ""
             primerNumero = 0.0
-            operacion = ""
-            tvDisplay.text = if (modoRegistro) "Crea tu PIN" else "0"
+            operacionActual = ""
+            tvDisplay.text = "0"
         }
 
-        // 4. Lógica del botón IGUAL (Matemática + Bóveda)
+        // 4. Botón Igual (La magia)
         btnIgual.setOnClickListener {
-            val claveParaComparar = prefs.getString("clave_secreta", null)
+            val claveGuardada = prefs.getString("clave_secreta", null)
 
-            // CASO A: Abrir Bóveda (Si el input coincide con el PIN)
-            if (!modoRegistro && inputActual == claveParaComparar) {
+            // SI ES LA CLAVE SECRETA: Abre la bóveda
+            if (inputActual == claveGuardada && operacionActual == "") {
                 val intent = Intent(this, BovedaActivity::class.java)
                 startActivity(intent)
                 inputActual = ""
                 tvDisplay.text = "0"
             } 
-            // CASO B: Guardar PIN nuevo
-            else if (modoRegistro) {
-                if (inputActual.length == 4) {
-                    prefs.edit().putString("clave_secreta", inputActual).apply()
-                    Toast.makeText(this, "PIN Guardado", Toast.LENGTH_SHORT).show()
-                    modoRegistro = false
-                    inputActual = ""
-                    tvDisplay.text = "0"
-                } else {
-                    Toast.makeText(this, "Debe ser de 4 dígitos", Toast.LENGTH_SHORT).show()
-                }
-            }
-            // CASO C: Hacer una cuenta matemática normal (Próxima mejora)
-            else {
-                // Aquí podrías poner la lógica de calcular, 
-                // pero lo más importante es que si no es el PIN, se limpie.
-                tvDisplay.text = "0"
+            // SI ESTAMOS EN MODO REGISTRO:
+            else if (claveGuardada == null && inputActual.length == 4) {
+                prefs.edit().putString("clave_secreta", inputActual).apply()
+                Toast.makeText(this, "PIN Guardado", Toast.LENGTH_SHORT).show()
                 inputActual = ""
+                tvDisplay.text = "0"
+            }
+            // SI ES UNA OPERACIÓN MATEMÁTICA:
+            else if (inputActual.isNotEmpty() && operacionActual.isNotEmpty()) {
+                val segundoNumero = inputActual.toDouble()
+                var resultado = 0.0
+                when (operacionActual) {
+                    "+" -> resultado = primerNumero + segundoNumero
+                    "-" -> resultado = primerNumero - segundoNumero
+                    "×" -> resultado = primerNumero * segundoNumero
+                    "÷" -> resultado = if (segundoNumero != 0.0) primerNumero / segundoNumero else 0.0
+                }
+                tvDisplay.text = resultado.toString()
+                inputActual = resultado.toString()
+                operacionActual = ""
             }
         }
     }
