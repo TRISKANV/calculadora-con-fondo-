@@ -21,14 +21,15 @@ class MainActivity : AppCompatActivity() {
         val btnIgual = findViewById<Button>(R.id.btnIgual)
         val btnBorrar = findViewById<Button>(R.id.btnBorrar)
         
-        // 1. Revisar si ya existe una clave guardada
         val prefs = getSharedPreferences("BovedaPrefs", Context.MODE_PRIVATE)
-        val claveGuardada = prefs.getString("clave_secreta", null)
+        
+        // 1. Revisar si ya existe una clave guardada
+        var claveGuardada = prefs.getString("clave_secreta", null)
 
         if (claveGuardada == null) {
             modoRegistro = true
             tvDisplay.text = "Crea tu PIN"
-            tvDisplay.textSize = 30f // Corregido: solo número + f
+            tvDisplay.textSize = 30f
         }
 
         // 2. Configurar botones numéricos (0-9)
@@ -53,12 +54,15 @@ class MainActivity : AppCompatActivity() {
             tvDisplay.text = if (modoRegistro) "Crea tu PIN" else "0"
         }
 
-        // 4. Lógica del botón IGUAL
+        // 4. Lógica del botón IGUAL (Validación corregida)
         btnIgual.setOnClickListener {
             if (modoRegistro) {
                 if (inputActual.length == 4) {
+                    // Guardamos la clave
                     prefs.edit().putString("clave_secreta", inputActual).apply()
                     Toast.makeText(this, "PIN Guardado. Ingrésalo ahora.", Toast.LENGTH_SHORT).show()
+                    
+                    // IMPORTANTE: Cambiamos el modo y limpiamos para que el usuario entre
                     modoRegistro = false
                     inputActual = ""
                     tvDisplay.text = "0"
@@ -66,7 +70,10 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "El PIN debe ser de 4 dígitos", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                if (inputActual == claveGuardada) {
+                // Volvemos a leer de SharedPreferences para asegurar que tenemos la última clave
+                val claveParaComparar = prefs.getString("clave_secreta", null)
+                
+                if (inputActual == claveParaComparar) {
                     val intent = Intent(this, BovedaActivity::class.java)
                     startActivity(intent)
                     inputActual = ""
