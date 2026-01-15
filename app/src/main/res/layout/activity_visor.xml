@@ -11,4 +11,16 @@
         android:adjustViewBounds="true"
         android:scaleType="fitCenter" />
 
+    <ImageButton
+        android:id="@+id/btnEliminar"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_delete"
+        android:contentDescription="Eliminar"
+        android:tint="#FFFFFF" />
+
 </RelativeLayout>
