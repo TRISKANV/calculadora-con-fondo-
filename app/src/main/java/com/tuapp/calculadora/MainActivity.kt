@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         if (claveGuardada == null) {
             modoRegistro = true
             tvDisplay.text = "Crea tu PIN"
-            tvDisplay.textSize = 40sp // Un poco más pequeño para que quepa el texto
+            tvDisplay.textSize = 40f // Un poco más pequeño para que quepa el texto
         }
 
         // 2. Configurar botones numéricos (0-9)
