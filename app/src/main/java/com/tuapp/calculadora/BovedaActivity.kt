@@ -6,83 +6,104 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.GridView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 
 class BovedaActivity : AppCompatActivity() {
 
-    private val PICK_IMAGE_CODE = 100
     private lateinit var gridView: GridView
+    private lateinit var adaptador: FotoAdapter
+    private val listaArchivos = mutableListOf<File>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_boveda)
 
-        gridView = findViewById(R.id.gvGaleria)
-        val btnAgregar = findViewById<FloatingActionButton>(R.id.btnAgregar)
+        gridView = findViewById(R.id.gridViewFotos)
+        val btnAgregar = findViewById<FloatingActionButton>(R.id.btnAgregarFoto)
 
-        // Al hacer clic en el botón +, se abre la galería del celular
-        btnAgregar.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.type = "image/*"
-            startActivityForResult(intent, PICK_IMAGE_CODE)
-        }
+        // 1. Cargar archivos al iniciar
+        cargarArchivosDesdeCarpeta()
 
-        // Cargar las fotos que ya existan al iniciar
-        actualizarGaleria()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK && requestCode == PICK_IMAGE_CODE) {
-            val uri = data?.data
-            if (uri != null) {
-                guardarFotoEnBoveda(uri)
-            }
-        }
-    }
-
-    private fun guardarFotoEnBoveda(uri: Uri) {
-        try {
-            // 1. Ubicar la carpeta secreta dentro de la app
-            val carpetaSecreta = File(filesDir, "mis_secretos")
-            if (!carpetaSecreta.exists()) carpetaSecreta.mkdirs()
-
-            // 2. Crear el archivo de destino con nombre único
-            val nombreArchivo = "IMG_${System.currentTimeMillis()}.jpg" 
-            val archivoDestino = File(carpetaSecreta, nombreArchivo)
-
-            // 3. Copiar los datos de la galería a la carpeta secreta
-            val inputStream: InputStream? = contentResolver.openInputStream(uri)
-            val outputStream = FileOutputStream(archivoDestino)
-
-            inputStream?.use { input ->
-                outputStream.use { output ->
-                    input.copyTo(output)
+        // 2. Configurar el seleccionador (ahora acepta imágenes y videos)
+        val seleccionarArchivoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri = result.data?.data
+                if (uri != null) {
+                    guardarArchivoEnCarpetaSecreta(uri)
                 }
             }
+        }
 
-            Toast.makeText(this, "Foto guardada en la bóveda", Toast.LENGTH_SHORT).show()
+        btnAgregar.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK)
+            intent.type = "*/*"
+            val mimeTypes = arrayOf("image/*", "video/*")
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+            seleccionarArchivoLauncher.launch(intent)
+        }
+
+        // 3. Lógica para abrir Visor (Foto) o Reproductor (Video)
+        gridView.setOnItemClickListener { _, _, position, _ ->
+            val archivo = listaArchivos[position]
+            val intent: Intent
             
-            // 4. Refrescar la pantalla para ver la nueva foto
-            actualizarGaleria()
+            if (archivo.extension.lowercase() == "mp4") {
+                intent = Intent(this, VideoActivity::class.java)
+                intent.putExtra("ruta_video", archivo.absolutePath)
+            } else {
+                intent = Intent(this, VisorActivity::class.java)
+                intent.putExtra("ruta_imagen", archivo.absolutePath)
+            }
+            startActivity(intent)
+        }
+    }
 
+    private fun cargarArchivosDesdeCarpeta() {
+        val carpeta = File(getExternalFilesDir(null), "mis_secretos")
+        if (!carpeta.exists()) carpeta.mkdirs()
+
+        val archivos = carpeta.listFiles()
+        listaArchivos.clear()
+        if (archivos != null) {
+            // Ordenar por los más nuevos primero
+            listaArchivos.addAll(archivos.filter { it.isFile }.sortedByDescending { it.lastModified() })
+        }
+
+        adaptador = FotoAdapter(this, listaArchivos)
+        gridView.adapter = adaptador
+    }
+
+    private fun guardarArchivoEnCarpetaSecreta(uri: Uri) {
+        try {
+            val contentResolver = contentResolver
+            val tipoMime = contentResolver.getType(uri)
+            val extension = if (tipoMime?.contains("video") == true) "mp4" else "jpg"
+            
+            val inputStream = contentResolver.openInputStream(uri)
+            val carpeta = File(getExternalFilesDir(null), "mis_secretos")
+            val nombreArchivo = "FILE_${System.currentTimeMillis()}.$extension"
+            val archivoDestino = File(carpeta, nombreArchivo)
+
+            val outputStream = FileOutputStream(archivoDestino)
+            inputStream?.copyTo(outputStream)
+            
+            inputStream?.close()
+            outputStream.close()
+
+            Toast.makeText(this, "Archivo guardado en la bóveda", Toast.LENGTH_SHORT).show()
+            cargarArchivosDesdeCarpeta()
+            
         } catch (e: Exception) {
-            e.printStackTrace()
             Toast.makeText(this, "Error al guardar: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun actualizarGaleria() {
-        val carpetaSecreta = File(filesDir, "mis_secretos")
-        // Buscamos todos los archivos que hemos guardado
-        val archivos = carpetaSecreta.listFiles()?.toList() ?: listOf()
-        
-        // Le pasamos la lista de archivos al "traductor" (Adapter)
-        val adapter = FotoAdapter(this, archivos)
-        gridView.adapter = adapter
+    override fun onResume() {
+        super.onResume()
+        cargarArchivosDesdeCarpeta()
     }
 }
