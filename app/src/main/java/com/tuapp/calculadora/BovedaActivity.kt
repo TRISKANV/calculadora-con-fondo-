@@ -1,4 +1,4 @@
-package com.tuapp.calculadora
+package com.tuapp.calculadora.R
 
 import android.app.Activity
 import android.content.Intent
