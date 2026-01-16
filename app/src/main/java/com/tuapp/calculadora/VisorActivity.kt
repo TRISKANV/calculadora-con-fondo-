@@ -1,47 +1,40 @@
 package com.tuapp.calculadora
 
-import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.viewpager2.widget.ViewPager2
 import java.io.File
 
 class VisorActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_visor)
 
-        val ivFotoCompleta = findViewById<ImageView>(R.id.ivFotoCompleta)
-        val btnEliminar = findViewById<ImageButton>(R.id.btnEliminar)
-        
-        val rutaImagen = intent.getStringExtra("ruta_imagen")
-        
-        if (rutaImagen != null) {
-            val archivo = File(rutaImagen)
-            ivFotoCompleta.setImageURI(Uri.fromFile(archivo))
+        val viewPager = findViewById<ViewPager2>(R.id.viewPagerFotos)
+        val btnCerrar = findViewById<ImageButton>(R.id.btnCerrarVisor)
 
-            btnEliminar.setOnClickListener {
-                // Mostrar una alerta de confirmación
-                AlertDialog.Builder(this)
-                    .setTitle("Eliminar foto")
-                    .setMessage("¿Estás seguro de que quieres borrar esta foto de la bóveda?")
-                    .setPositiveButton("Eliminar") { _, _ ->
-                        if (archivo.exists()) {
-                            val eliminado = archivo.delete()
-                            if (eliminado) {
-                                Toast.makeText(this, "Foto eliminada", Toast.LENGTH_SHORT).show()
-                                finish() // Cerramos el visor y volvemos a la galería
-                            } else {
-                                Toast.makeText(this, "Error al eliminar", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            }
+        // Obtener la ruta de la carpeta secreta
+        val carpeta = File(getExternalFilesDir(null), "mis_secretos")
+        // Filtrar solo imágenes (no videos)
+        val listaFotos = carpeta.listFiles()
+            ?.filter { it.extension.lowercase() != "mp4" }
+            ?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+        // Obtener cuál foto se tocó en la pantalla anterior
+        val rutaSeleccionada = intent.getStringExtra("ruta_imagen")
+        val posicionInicial = listaFotos.indexOfFirst { it.absolutePath == rutaSeleccionada }
+
+        // Configurar el adaptador
+        val adaptador = VisorPagerAdapter(listaFotos)
+        viewPager.adapter = adaptador
+        
+        // Empezar en la foto que tocaste
+        if (posicionInicial != -1) {
+            viewPager.setCurrentItem(posicionInicial, false)
         }
+
+        btnCerrar.setOnClickListener { finish() }
     }
 }
