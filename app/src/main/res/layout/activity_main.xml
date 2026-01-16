@@ -2,12 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:background="#000000"
+    android:padding="16dp">
 
     <TextView
-        android:id="@+id/tvDisplay"
+        android:id="@+id/tvPantalla"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -15,34 +15,39 @@
         android:padding="20dp"
         android:text="0"
         android:textColor="#FFFFFF"
-        android:textSize="70sp" />
+        android:textSize="60sp" />
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="horizontal">
-        <Button android:id="@+id/btn7" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="7" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btn8" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="8" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btn9" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="9" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btnDiv" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#FF9F0A" android:text="÷" android:textColor="#FFFFFF" android:textSize="25sp" />
-    </LinearLayout>
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="4"
+        android:rowCount="5"
+        android:alignmentMode="alignMargins"
+        android:columnOrderPreserved="false">
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="horizontal">
-        <Button android:id="@+id/btn4" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="4" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btn5" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="5" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btn6" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="6" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btnMulti" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#FF9F0A" android:text="×" android:textColor="#FFFFFF" android:textSize="25sp" />
-    </LinearLayout>
+        <Button style="@style/BotonCalculadora" android:text="AC" android:textColor="#FFBB00"/>
+        <Button style="@style/BotonCalculadora" android:text="+/-" />
+        <Button style="@style/BotonCalculadora" android:text="%" />
+        <Button style="@style/BotonCalculadora" android:text="/" android:backgroundTint="#FF9500"/>
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="horizontal">
-        <Button android:id="@+id/btn1" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="1" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btn2" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="2" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btn3" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="3" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btnResta" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#FF9F0A" android:text="-" android:textColor="#FFFFFF" android:textSize="25sp" />
-    </LinearLayout>
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn7" android:text="7" />
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn8" android:text="8" />
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn9" android:text="9" />
+        <Button style="@style/BotonCalculadora" android:text="*" android:backgroundTint="#FF9500"/>
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="horizontal">
-        <Button android:id="@+id/btn0" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#333333" android:text="0" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btnBorrar" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#A5A5A5" android:text="AC" android:textColor="#000000" android:textSize="25sp" />
-        <Button android:id="@+id/btnSuma" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#FF9F0A" android:text="+" android:textColor="#FFFFFF" android:textSize="25sp" />
-        <Button android:id="@+id/btnIgual" android:layout_width="80dp" android:layout_height="80dp" android:layout_margin="5dp" android:backgroundTint="#FF9F0A" android:text="=" android:textColor="#FFFFFF" android:textSize="25sp" />
-    </LinearLayout>
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn4" android:text="4" />
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn5" android:text="5" />
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn6" android:text="6" />
+        <Button style="@style/BotonCalculadora" android:text="-" android:backgroundTint="#FF9500"/>
 
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn1" android:text="1" />
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn2" android:text="2" />
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn3" android:text="3" />
+        <Button style="@style/BotonCalculadora" android:text="+" android:backgroundTint="#FF9500"/>
+
+        <Button style="@style/BotonCalculadora" android:id="@+id/btn0" android:text="0" android:layout_columnSpan="2" android:layout_width="0dp" android:layout_gravity="fill_horizontal"/>
+        <Button style="@style/BotonCalculadora" android:text="." />
+        <Button style="@style/BotonCalculadora" android:id="@+id/btnIgual" android:text="=" android:backgroundTint="#FF9500"/>
+
+    </GridLayout>
 </LinearLayout>
