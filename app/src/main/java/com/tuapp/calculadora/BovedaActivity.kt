@@ -1,4 +1,4 @@
-package com.tuapp.calculadora.R
+package com.tuapp.calculadora
 
 import android.app.Activity
 import android.content.Intent
@@ -8,7 +8,9 @@ import android.widget.GridView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+// IMPORTANTE: Esta línea conecta el código con tus XML
+import com.tuapp.calculadora.R 
+import android.widget.ImageButton
 import java.io.File
 import java.io.FileOutputStream
 
@@ -23,12 +25,11 @@ class BovedaActivity : AppCompatActivity() {
         setContentView(R.layout.activity_boveda)
 
         gridView = findViewById(R.id.gridViewFotos)
-        val btnAgregar = findViewById<FloatingActionButton>(R.id.btnAgregarFoto)
+        // Usamos ImageButton porque es el que pusimos en el XML anterior
+        val btnAgregar = findViewById<ImageButton>(R.id.btnAgregarFoto)
 
-        // 1. Cargar archivos al iniciar
         cargarArchivosDesdeCarpeta()
 
-        // 2. Configurar el seleccionador (ahora acepta imágenes y videos)
         val seleccionarArchivoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
@@ -46,19 +47,17 @@ class BovedaActivity : AppCompatActivity() {
             seleccionarArchivoLauncher.launch(intent)
         }
 
-        // 3. Lógica para abrir Visor (Foto) o Reproductor (Video)
         gridView.setOnItemClickListener { _, _, position, _ ->
             val archivo = listaArchivos[position]
-            val intent: Intent
-            
             if (archivo.extension.lowercase() == "mp4") {
-                intent = Intent(this, VideoActivity::class.java)
+                val intent = Intent(this, VideoActivity::class.java)
                 intent.putExtra("ruta_video", archivo.absolutePath)
+                startActivity(intent)
             } else {
-                intent = Intent(this, VisorActivity::class.java)
+                val intent = Intent(this, VisorActivity::class.java)
                 intent.putExtra("ruta_imagen", archivo.absolutePath)
+                startActivity(intent)
             }
-            startActivity(intent)
         }
     }
 
@@ -69,7 +68,6 @@ class BovedaActivity : AppCompatActivity() {
         val archivos = carpeta.listFiles()
         listaArchivos.clear()
         if (archivos != null) {
-            // Ordenar por los más nuevos primero
             listaArchivos.addAll(archivos.filter { it.isFile }.sortedByDescending { it.lastModified() })
         }
 
@@ -79,10 +77,8 @@ class BovedaActivity : AppCompatActivity() {
 
     private fun guardarArchivoEnCarpetaSecreta(uri: Uri) {
         try {
-            val contentResolver = contentResolver
             val tipoMime = contentResolver.getType(uri)
             val extension = if (tipoMime?.contains("video") == true) "mp4" else "jpg"
-            
             val inputStream = contentResolver.openInputStream(uri)
             val carpeta = File(getExternalFilesDir(null), "mis_secretos")
             val nombreArchivo = "FILE_${System.currentTimeMillis()}.$extension"
@@ -90,15 +86,13 @@ class BovedaActivity : AppCompatActivity() {
 
             val outputStream = FileOutputStream(archivoDestino)
             inputStream?.copyTo(outputStream)
-            
             inputStream?.close()
             outputStream.close()
 
-            Toast.makeText(this, "Archivo guardado en la bóveda", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Guardado en la bóveda", Toast.LENGTH_SHORT).show()
             cargarArchivosDesdeCarpeta()
-            
         } catch (e: Exception) {
-            Toast.makeText(this, "Error al guardar: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
