@@ -25,18 +25,18 @@
         android:background="@android:drawable/btn_default"
         android:src="@android:drawable/ic_input_add"
         android:contentDescription="Agregar" />
-
+   
     <ImageButton
     android:id="@+id/btnNavegador"
-    android:layout_width="56dp"
-    android:layout_height="56dp"
+    android:layout_width="60dp"
+    android:layout_height="60dp"
     android:layout_alignParentBottom="true"
     android:layout_alignParentStart="true"
-    android:layout_margin="16dp"
-    android:padding="12dp"
-    android:scaleType="fitCenter"
-    android:src="@android:drawable/ic_menu_browser" 
+    android:layout_margin="20dp"
     android:background="@drawable/boton_redondo_azul"
+    android:src="@drawable/ic_mundo_secreto" 
+    android:scaleType="centerInside"
+    android:padding="8dp"
     android:contentDescription="Navegador" />
 
 </RelativeLayout>
