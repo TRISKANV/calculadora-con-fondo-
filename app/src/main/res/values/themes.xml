@@ -16,4 +16,37 @@
         <item name="android:textAllCaps">false</item>
         <item name="android:gravity">center</item>
     </style>
+    
+    <style name="BotonBase">
+        <item name="android:layout_width="0dp">0dp</item>
+        <item name="android:layout_height="65dp">65dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:layout_margin">2dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+
+    <style name="BotonCientifico" parent="BotonBase">
+        <item name="android:backgroundTint">#212121</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="BotonNumero" parent="BotonBase">
+        <item name="android:backgroundTint">#333333</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="BotonOperador" parent="BotonBase">
+        <item name="android:backgroundTint">#424242</item>
+        <item name="android:textColor">#80CBC4</item>
+    </style>
+
+    <style name="BotonAccion" parent="BotonBase">
+        <item name="android:backgroundTint">#5D4037</item>
+    </style>
+
+    <style name="BotonIgual" parent="BotonBase">
+        <item name="android:backgroundTint">#00796B</item>
+    </style>
 </resources>
