@@ -16,7 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.abs
 
 class BovedaActivity : AppCompatActivity(), SensorEventListener {
 
@@ -32,15 +31,19 @@ class BovedaActivity : AppCompatActivity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_boveda)
 
-        // Inicializar Sensores
+        // 1. Inicializar Sensores (Modo Pánico)
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         acelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
+        // 2. Referencias de los componentes de la interfaz
         gridView = findViewById(R.id.gridViewFotos)
         val btnAgregar = findViewById<ImageButton>(R.id.btnAgregarFoto)
+        val btnNavegador = findViewById<ImageButton>(R.id.btnNavegador) // BOTÓN MUNDO
 
+        // 3. Cargar las fotos que ya existan
         cargarArchivosDesdeCarpeta()
 
+        // 4. Lógica para elegir fotos/videos del celular
         val seleccionarArchivoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
@@ -56,6 +59,13 @@ class BovedaActivity : AppCompatActivity(), SensorEventListener {
             seleccionarArchivoLauncher.launch(intent)
         }
 
+        // 5. CONFIGURAR BOTÓN DEL NAVEGADOR (EL MUNDITO)
+        btnNavegador.setOnClickListener {
+            val intent = Intent(this, NavegadorActivity::class.java)
+            startActivity(intent)
+        }
+
+        // 6. Al tocar una foto, abrir el visor o el video
         gridView.setOnItemClickListener { _, _, position, _ ->
             val archivo = listaArchivos[position]
             if (archivo.extension.lowercase() == "mp4") {
@@ -70,25 +80,22 @@ class BovedaActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    // LÓGICA DEL SENSOR (MODO PÁNICO)
+    // --- LÓGICA DEL SENSOR (MODO PÁNICO) ---
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
-            val z = event.values[2] // El eje Z detecta si está boca arriba o boca abajo
-
-            // Si Z es menor a -8, significa que el celular está boca abajo
-            if (z < -8.5) {
+            val z = event.values[2]
+            if (z < -8.5) { // Si el celular está boca abajo
                 ejecutarModoPanico()
             }
         }
     }
 
     private fun ejecutarModoPanico() {
-        // Opción B: Cerrar todo y volver al HOME del celular
         val startMain = Intent(Intent.ACTION_MAIN)
         startMain.addCategory(Intent.CATEGORY_HOME)
         startMain.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(startMain)
-        finish() // Cierra la actividad para que no quede en segundo plano abierta
+        finish() 
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -96,7 +103,6 @@ class BovedaActivity : AppCompatActivity(), SensorEventListener {
     override fun onResume() {
         super.onResume()
         cargarArchivosDesdeCarpeta()
-        // Registrar el sensor al volver a la app
         acelerometro?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
@@ -104,10 +110,10 @@ class BovedaActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onPause() {
         super.onPause()
-        // Pausar el sensor para no gastar batería
         sensorManager.unregisterListener(this)
     }
 
+    // --- MANEJO DE ARCHIVOS ---
     private fun cargarArchivosDesdeCarpeta() {
         val carpeta = File(getExternalFilesDir(null), "mis_secretos")
         if (!carpeta.exists()) carpeta.mkdirs()
