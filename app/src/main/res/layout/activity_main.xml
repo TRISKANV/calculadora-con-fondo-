@@ -3,25 +3,25 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:background="#1C1C1C"
+    android:orientation="vertical">
+
     <LinearLayout
-        
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.2"
+        android:layout_weight="1"
         android:gravity="bottom|end"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="24dp"
+        android:background="#252525">
 
         <TextView
             android:id="@+id/tvExpresion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
-            android:textColor="#88FFFFFF"
-            android:textSize="24sp" />
+            android:textColor="#B0B0B0"
+            android:textSize="28sp" />
 
         <TextView
             android:id="@+id/tvResultado"
@@ -29,16 +29,17 @@
             android:layout_height="wrap_content"
             android:text="0"
             android:textColor="#FFFFFF"
-            android:textSize="48sp"
+            android:textSize="56sp"
             android:textStyle="bold" />
     </LinearLayout>
 
     <GridLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3"
+        android:layout_weight="2.5"
         android:columnCount="5"
-        android:rowCount="7">
+        android:rowCount="7"
+        android:padding="4dp">
 
         <Button style="@style/BotonCientifico" android:text="sin" />
         <Button style="@style/BotonCientifico" android:text="cos" />
@@ -79,10 +80,7 @@
         <Button style="@style/BotonNumero" android:text="." />
         <Button style="@style/BotonNumero" android:id="@+id/btnAbrirBovedaInvisible" android:text="%" />
         <Button style="@style/BotonOperador" android:text="+" />
-        <Button
-            android:id="@+id/btnIgual"
-            style="@style/BotonIgual"
-            android:text="=" />
+        <Button id="@+id/btnIgual" style="@style/BotonIgual" android:text="=" />
     </GridLayout>
 
 </LinearLayout>
