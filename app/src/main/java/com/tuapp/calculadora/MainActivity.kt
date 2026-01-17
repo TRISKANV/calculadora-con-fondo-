@@ -1,75 +1,119 @@
 package com.tuapp.calculadora
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import net.objecthunter.exp4j.ExpressionBuilder
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var tvPantalla: TextView
-    private var entradaActual = ""
-    private var esPrimeraVez = false
+    private lateinit var tvExpresion: TextView
+    private lateinit var tvResultado: TextView
+    private var ultimaExpresion: String = ""
+    
+    // TU CLAVE SECRETA (Cambiála por la que quieras)
+    private val CLAVE_SECRETA = "1234"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        tvPantalla = findViewById(R.id.tvPantalla)
+        tvExpresion = findViewById(R.id.tvExpresion)
+        tvResultado = findViewById(R.id.tvResultado)
 
-        // Revisar si ya existe una contraseña guardada
-        val prefs = getSharedPreferences("Seguridad", Context.MODE_PRIVATE)
-        val contraseñaGuardada = prefs.getString("clave", null)
+        // Buscamos todos los botones y les asignamos lógica
+        configurarBotones()
+    }
 
-        if (contraseñaGuardada == null) {
-            esPrimeraVez = true
-            tvPantalla.text = "CREAR CLAVE"
-            tvPantalla.textSize = 30f // Achicamos un poco el texto para que quepa
-        }
-
-        // Configurar botones numéricos
-        val idsNumeros = listOf(
-            R.id.btn0, R.id.btn1, R.id.btn2, R.id.btn3, R.id.btn4,
-            R.id.btn5, R.id.btn6, R.id.btn7, R.id.btn8, R.id.btn9
+    private fun configurarBotones() {
+        val IDsBotones = listOf(
+            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".",
+            "sin", "cos", "tan", "log", "ln", "π", "e", "(", ")", "^", "√", "!",
+            "+", "-", "×", "÷", "AC", "DEL", "%"
         )
 
-        for (id in idsNumeros) {
-            findViewById<Button>(id).setOnClickListener {
-                val boton = it as Button
-                if (entradaActual == "0") entradaActual = ""
-                entradaActual += boton.text.toString()
-                tvPantalla.text = entradaActual
-                tvPantalla.textSize = 70f // Volvemos al tamaño grande
+        // Iteramos por todos los botones para no escribir uno por uno
+        val rootLayout = findViewById<android.widget.LinearLayout>(R.id.rootLayout) // Asegurate que el layout principal tenga este ID o usá findViewById en el contenedor de botones
+        
+        // Forma simple: buscamos por el texto del botón
+        val botones = mAllButtons() 
+        botones.forEach { btn ->
+            btn.setOnClickListener {
+                alPresionarBoton(btn.text.toString())
             }
         }
 
-        // Botón IGUAL
+        // EL TRUCO: Si mantienen presionado el botón "%"
+        findViewById<Button>(R.id.btnAbrirBovedaInvisible)?.setOnLongClickListener {
+            Toast.makeText(this, "Modo Administrador", Toast.LENGTH_SHORT).show()
+            true
+        }
+
+        // BOTÓN IGUAL (El que dispara la magia)
         findViewById<Button>(R.id.btnIgual).setOnClickListener {
-            val claveActual = prefs.getString("clave", null)
-
-            if (esPrimeraVez) {
-                // GUARDAR LA CLAVE POR PRIMERA VEZ
-                if (entradaActual.length >= 4) {
-                    prefs.edit().putString("clave", entradaActual).apply()
-                    Toast.makeText(this, "Contraseña Guardada", Toast.LENGTH_SHORT).show()
-                    esPrimeraVez = false
-                    entradaActual = ""
-                    tvPantalla.text = "0"
-                } else {
-                    Toast.makeText(this, "Mínimo 4 números", Toast.LENGTH_SHORT).show()
-                }
+            val contenido = tvExpresion.text.toString()
+            
+            if (contenido == CLAVE_SECRETA) {
+                val intent = Intent(this, BovedaActivity::class.java)
+                startActivity(intent)
             } else {
-                // VERIFICAR CLAVE NORMAL
-                if (entradaActual == claveActual) {
-                    val intent = Intent(this, BovedaActivity::class.java)
-                    startActivity(intent)
-                }
-                entradaActual = ""
-                tvPantalla.text = "0"
+                ejecutarCalculo()
             }
         }
+    }
+
+    private fun alPresionarBoton(valor: String) {
+        when (valor) {
+            "AC" -> {
+                tvExpresion.text = ""
+                tvResultado.text = "0"
+            }
+            "DEL" -> {
+                val current = tvExpresion.text.toString()
+                if (current.isNotEmpty()) tvExpresion.text = current.dropLast(1)
+            }
+            "×" -> tvExpresion.append("*")
+            "÷" -> tvExpresion.append("/")
+            "π" -> tvExpresion.append("3.14159")
+            "e" -> tvExpresion.append("2.71828")
+            else -> tvExpresion.append(valor)
+        }
+    }
+
+    private fun ejecutarCalculo() {
+        try {
+            val expresionStr = tvExpresion.text.toString()
+                .replace("×", "*")
+                .replace("÷", "/")
+            
+            val expresion = ExpressionBuilder(expresionStr).build()
+            val resultado = expresion.evaluate()
+            
+            val resultLong = resultado.toLong()
+            if (resultado == resultLong.toDouble()) {
+                tvResultado.text = resultLong.toString()
+            } else {
+                tvResultado.text = resultado.toString()
+            }
+        } catch (e: Exception) {
+            tvResultado.text = "Error"
+        }
+    }
+
+    // Función auxiliar para obtener todos los botones del layout
+    private fun mAllButtons(): List<Button> {
+        val list = mutableListOf<Button>()
+        val viewGroup = findViewById<android.view.ViewGroup>(android.R.id.content)
+        fun findButtons(view: android.view.View) {
+            if (view is Button) list.add(view)
+            else if (view is android.view.ViewGroup) {
+                for (i in 0 until view.childCount) findButtons(view.getChildAt(i))
+            }
+        }
+        findButtons(viewGroup)
+        return list
     }
 }
