@@ -117,3 +117,43 @@ class MainActivity : AppCompatActivity() {
         return list
     }
 }
+// ... (tus otros imports)
+import android.content.Context
+
+class MainActivity : AppCompatActivity() {
+    // ... (tus variables de TextView)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        
+        // ... (inicializar tvExpresion y tvResultado)
+
+        val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
+
+        findViewById<Button>(R.id.btnIgual).setOnClickListener {
+            val entrada = tvExpresion.text.toString()
+            val passGuardada = prefs.getString("clave", null)
+
+            if (passGuardada == null) {
+                // CASO 1: REGISTRO (Primera vez)
+                if (entrada.length >= 4) { // Ponemos un mínimo de 4 números
+                    prefs.edit().putString("clave", entrada).apply()
+                    Toast.makeText(this, "Contraseña guardada: $entrada", Toast.LENGTH_LONG).show()
+                    tvExpresion.text = ""
+                } else {
+                    Toast.makeText(this, "Escribí al menos 4 números para tu clave", Toast.LENGTH_SHORT).show()
+                }
+            } else if (entrada == passGuardada) {
+                // CASO 2: ACCESO
+                val intent = Intent(this, BovedaActivity::class.java)
+                startActivity(intent)
+            } else {
+                // CASO 3: ES UNA OPERACIÓN MATEMÁTICA
+                ejecutarCalculo()
+            }
+        }
+    }
+    
+    // ... (el resto de tus funciones: configurarBotones, ejecutarCalculo, etc.)
+}
