@@ -1,42 +1,39 @@
 package com.tuapp.calculadora
 
 import android.os.Bundle
-import android.widget.ImageButton
-import android.widget.PopupMenu
-import android.widget.Toast
+import android.view.GravityCorner
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
+import android.widget.ImageButton
+import android.widget.Toast
+import androidx.core.view.GravityCompat
 
 class BovedaActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 
         setContentView(R.layout.activity_boveda)
 
-        val btnMenu = findViewById<ImageButton>(R.id.btnMenu)
+        val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
+        val btnAbrirMenu = findViewById<ImageButton>(R.id.btnAbrirMenu)
+        val navView = findViewById<NavigationView>(R.id.navigationView)
 
-        btnMenu?.setOnClickListener { view ->
-            val popup = PopupMenu(this, view)
-            
-            // Creamos el menú igual al de la imagen
-            popup.menu.add("📷 Fotos")
-            popup.menu.add("🎥 Videos")
-            popup.menu.add("🌐 Internet")
-            popup.menu.add("📝 Notas")
-            popup.menu.add("⚙️ Ajustes")
-            popup.menu.add("❌ Salir")
+        // 
+        btnAbrirMenu.setOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.END)
+        }
 
-            popup.setOnMenuItemClickListener { item ->
-                when (item.title) {
-                    "📷 Fotos" -> Toast.makeText(this, "Sección Fotos", Toast.LENGTH_SHORT).show()
-                    "🎥 Videos" -> Toast.makeText(this, "Sección Videos", Toast.LENGTH_SHORT).show()
-                    "🌐 Internet" -> Toast.makeText(this, "Navegador Seguro", Toast.LENGTH_SHORT).show()
-                    "📝 Notas" -> Toast.makeText(this, "Mis Notas", Toast.LENGTH_SHORT).show()
-                    "❌ Salir" -> finish()
-                }
-                true
+        // 
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_fotos -> Toast.makeText(this, "Fotos", Toast.LENGTH_SHORT).show()
+                R.id.nav_videos -> Toast.makeText(this, "Videos", Toast.LENGTH_SHORT).show()
+                R.id.nav_internet -> Toast.makeText(this, "Internet", Toast.LENGTH_SHORT).show()
+                R.id.nav_notas -> Toast.makeText(this, "Notas", Toast.LENGTH_SHORT).show()
             }
-            popup.show()
+            drawerLayout.closeDrawer(GravityCompat.END)
+            true
         }
     }
 }
