@@ -22,9 +22,10 @@
             </intent-filter>
         </activity>
 
-        <activity 
-            android:name=".BovedaActivity"
-            android:exported="false" />
+       <activity 
+    android:name=".BovedaActivity"
+    android:theme="@style/Theme.AppCompat.NoActionBar"
+    android:exported="false" />
 
         <activity 
             android:name=".VisorActivity"
