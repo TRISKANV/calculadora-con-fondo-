@@ -23,55 +23,51 @@ class MainActivity : AppCompatActivity() {
         tvExpresion = findViewById(R.id.tvExpresion)
         tvResultado = findViewById(R.id.tvResultado)
 
-        // IMPORTANTE: Primero configuramos todos los botones EXCEPTO el igual
+        // Buscamos el contenedor raíz
         val root = findViewById<ViewGroup>(R.id.rootLayout)
-        configurarBotonesSimples(root)
-
-        // Luego configuramos el botón IGUAL con su lógica de contraseña
-        configurarBotonIgual()
+        
+        // Configuramos TODOS los botones
+        configurarTodosLosBotones(root)
     }
 
-    private fun configurarBotonesSimples(view: View) {
+    private fun configurarTodosLosBotones(view: View) {
+        val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
+
         if (view is Button) {
-            // Solo si NO es el botón igual, le asignamos que escriba texto
-            if (view.id != R.id.btnIgual) {
-                view.setOnClickListener { 
-                    val botonTexto = view.text.toString()
-                    alPresionarBoton(botonTexto)
+            val texto = view.text.toString()
+
+            if (texto == "=") {
+                // LÓGICA DE SEGURIDAD / IGUAL
+                view.setOnClickListener {
+                    val entrada = tvExpresion.text.toString()
+                    val passGuardada = prefs.getString("clave", null)
+
+                    if (passGuardada == null) {
+                        // REGISTRO
+                        if (entrada.length >= 4 && !entrada.contains(Regex("[+/*×÷-]"))) {
+                            prefs.edit().putString("clave", entrada).apply()
+                            Toast.makeText(this, "✅ CLAVE GUARDADA: $entrada", Toast.LENGTH_LONG).show()
+                            tvExpresion.text = ""
+                            tvResultado.text = "0"
+                        } else {
+                            Toast.makeText(this, "Poné 4 números y tocá =", Toast.LENGTH_SHORT).show()
+                        }
+                    } else if (entrada == passGuardada) {
+                        // ACCESO
+                        val intent = Intent(this, BovedaActivity::class.java)
+                        startActivity(intent)
+                    } else {
+                        // CÁLCULO
+                        ejecutarCalculo()
+                    }
                 }
+            } else {
+                // BOTONES NORMALES (AC, DEL, números, etc)
+                view.setOnClickListener { alPresionarBoton(texto) }
             }
         } else if (view is ViewGroup) {
             for (i in 0 until view.childCount) {
-                configurarBotonesSimples(view.getChildAt(i))
-            }
-        }
-    }
-
-    private fun configurarBotonIgual() {
-        val btnIgual = findViewById<Button>(R.id.btnIgual)
-        val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
-
-        btnIgual?.setOnClickListener {
-            val entrada = tvExpresion.text.toString()
-            val passGuardada = prefs.getString("clave", null)
-
-            if (passGuardada == null) {
-                // PRIMERA VEZ: REGISTRO
-                if (entrada.length >= 4 && !entrada.contains(Regex("[+/*×÷-]"))) {
-                    prefs.edit().putString("clave", entrada).apply()
-                    Toast.makeText(this, "✅ CLAVE CONFIGURADA: $entrada", Toast.LENGTH_LONG).show()
-                    tvExpresion.text = ""
-                    tvResultado.text = "0"
-                } else {
-                    Toast.makeText(this, "Escribí 4 números (sin signos) y dale a =", Toast.LENGTH_SHORT).show()
-                }
-            } else if (entrada == passGuardada) {
-                // ACCESO A BÓVEDA
-                val intent = Intent(this, BovedaActivity::class.java)
-                startActivity(intent)
-            } else {
-                // CÁLCULO NORMAL
-                ejecutarCalculo()
+                configurarTodosLosBotones(view.getChildAt(i))
             }
         }
     }
