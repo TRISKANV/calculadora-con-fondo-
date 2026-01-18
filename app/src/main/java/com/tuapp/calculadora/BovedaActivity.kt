@@ -10,7 +10,7 @@ class BovedaActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // ESTA LÍNEA es la que conecta con activity_boveda.xml
+        // 
         setContentView(R.layout.activity_boveda)
 
         val btnMenu = findViewById<ImageButton>(R.id.btnMenu)
