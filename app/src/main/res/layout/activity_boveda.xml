@@ -1,48 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:orientation="vertical"
+    android:background="#1C1C1C"
     android:padding="16dp">
 
-    <TextView
+    <ImageButton
+        android:id="@+id/btnMenu"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_more"
+        android:contentDescription="Menu"
+        android:tint="#FFFFFF" />
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Bóveda Secreta"
-        android:textColor="#FFFFFF"
-        android:textSize="24sp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="20dp"/>
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btnAgregarFoto"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Agregar Foto" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="¡Bienvenido a tu\nBóveda Secreta!"
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:gravity="center" />
 
-    <Button
-        android:id="@+id/btnNavegador"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Navegador Privado"
-        android:layout_marginTop="8dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Usa el menú lateral para empezar."
+            android:textColor="#B0B0B0"
+            android:textSize="16sp"
+            android:gravity="center" />
+    </LinearLayout>
 
-    <GridView
-        android:id="@+id/gridViewFotos"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:numColumns="3"
-        android:verticalSpacing="10dp"
-        android:horizontalSpacing="10dp"
-        android:layout_marginTop="16dp" />
-
-    <Button
-        android:id="@+id/btnSalir"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Salir"
-        android:backgroundTint="#D32F2F" />
-
-</LinearLayout>
+</RelativeLayout>
