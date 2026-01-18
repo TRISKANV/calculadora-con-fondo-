@@ -18,67 +18,60 @@ class MainActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 1. Inflamos la vista primero
         setContentView(R.layout.activity_main)
 
-        // 2. Referenciamos los TextViews (Asegurate que estos IDs existan en el XML)
         tvExpresion = findViewById(R.id.tvExpresion)
         tvResultado = findViewById(R.id.tvResultado)
 
-        // 3. Configuramos los botones con un Try/Catch para que no se congele si algo falla
-        try {
-            configurarBotones()
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error al cargar botones", Toast.LENGTH_SHORT).show()
+        // IMPORTANTE: Primero configuramos todos los botones EXCEPTO el igual
+        val root = findViewById<ViewGroup>(R.id.rootLayout)
+        configurarBotonesSimples(root)
+
+        // Luego configuramos el botón IGUAL con su lógica de contraseña
+        configurarBotonIgual()
+    }
+
+    private fun configurarBotonesSimples(view: View) {
+        if (view is Button) {
+            // Solo si NO es el botón igual, le asignamos que escriba texto
+            if (view.id != R.id.btnIgual) {
+                view.setOnClickListener { 
+                    val botonTexto = view.text.toString()
+                    alPresionarBoton(botonTexto)
+                }
+            }
+        } else if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                configurarBotonesSimples(view.getChildAt(i))
+            }
         }
     }
 
-    private fun configurarBotones() {
+    private fun configurarBotonIgual() {
+        val btnIgual = findViewById<Button>(R.id.btnIgual)
         val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
 
-        // Buscamos el contenedor raíz (rootLayout)
-        val root = findViewById<ViewGroup>(R.id.rootLayout)
-        
-        // Función para recorrer todos los botones y asignarles el click
-        asignarClicksRecursivo(root)
-
-        // Lógica específica para el botón IGUAL (ID: btnIgual)
-        findViewById<Button>(R.id.btnIgual)?.setOnClickListener {
+        btnIgual?.setOnClickListener {
             val entrada = tvExpresion.text.toString()
             val passGuardada = prefs.getString("clave", null)
 
             if (passGuardada == null) {
-                // Registro (mínimo 4 números)
-                if (entrada.length >= 4 && !entrada.contains(Regex("[+/*-]"))) {
+                // PRIMERA VEZ: REGISTRO
+                if (entrada.length >= 4 && !entrada.contains(Regex("[+/*×÷-]"))) {
                     prefs.edit().putString("clave", entrada).apply()
-                    Toast.makeText(this, "Clave Guardada", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "✅ CLAVE CONFIGURADA: $entrada", Toast.LENGTH_LONG).show()
                     tvExpresion.text = ""
+                    tvResultado.text = "0"
                 } else {
-                    Toast.makeText(this, "Escribí 4 números para tu clave", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Escribí 4 números (sin signos) y dale a =", Toast.LENGTH_SHORT).show()
                 }
             } else if (entrada == passGuardada) {
-                // Abrir Bóveda
-                try {
-                    val intent = Intent(this, BovedaActivity::class.java)
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Error: No se encontró la Bóveda", Toast.LENGTH_SHORT).show()
-                }
+                // ACCESO A BÓVEDA
+                val intent = Intent(this, BovedaActivity::class.java)
+                startActivity(intent)
             } else {
+                // CÁLCULO NORMAL
                 ejecutarCalculo()
-            }
-        }
-    }
-
-    private fun asignarClicksRecursivo(view: View) {
-        if (view is Button) {
-            // Evitamos que el botón IGUAL se configure aquí para no pisar su lógica especial
-            if (view.id != R.id.btnIgual) {
-                view.setOnClickListener { alPresionarBoton(view.text.toString()) }
-            }
-        } else if (view is ViewGroup) {
-            for (i in 0 until view.childCount) {
-                asignarClicksRecursivo(view.getChildAt(i))
             }
         }
     }
