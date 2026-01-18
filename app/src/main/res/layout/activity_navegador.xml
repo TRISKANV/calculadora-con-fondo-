@@ -3,35 +3,51 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#000000">
+    android:background="#121212">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="#1C1C1C">
 
         <EditText
             android:id="@+id/etUrl"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:hint="Buscar o escribir URL"
+            android:background="@android:drawable/editbox_background_normal"
+            android:hint="Buscar o escribir URL..."
+            android:paddingStart="12dp"
             android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:backgroundTint="#FF9F0A"
-            android:inputType="textUri" />
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            android:inputType="textUri"
+            android:imeOptions="actionGo"/>
 
-        <Button
+        <ImageButton
             android:id="@+id/btnIr"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ir"
-            android:backgroundTint="#FF9F0A" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_send"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Ir"
+            android:tint="#FFFFFF" />
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:visibility="gone"
+        android:progressTint="#00E676"/>
 
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
 </LinearLayout>
