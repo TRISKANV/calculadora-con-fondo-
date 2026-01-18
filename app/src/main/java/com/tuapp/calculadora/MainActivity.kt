@@ -91,21 +91,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun ejecutarCalculo() {
-        val texto = tvExpresion.text.toString()
-        if (texto.isEmpty()) return
+   private fun ejecutarCalculo() {
+    var texto = tvExpresion.text.toString()
+    if (texto.isEmpty()) return
+    
+    try {
         
-        try {
-            val expresion = ExpressionBuilder(texto.replace("×", "*").replace("÷", "/")).build()
-            val res = expresion.evaluate()
-            val resLong = res.toLong()
-            if (res == resLong.toDouble()) {
-                tvResultado.text = resLong.toString()
-            } else {
-                tvResultado.text = String.format("%.4f", res)
+        texto = texto.replace("×", "*").replace("÷", "/")
+
+       
+        val parentesisAbiertos = texto.count { it == '(' }
+        val parentesisCerrados = texto.count { it == ')' }
+        val faltantes = parentesisAbiertos - parentesisCerrados
+        
+        
+        if (faltantes > 0) {
+            for (i in 1..faltantes) {
+                texto += ")"
             }
-        } catch (e: Exception) {
-            tvResultado.text = "Error"
         }
+        // -------------------------------------------------------------
+
+        val expresion = ExpressionBuilder(texto).build()
+        val res = expresion.evaluate()
+        
+        val resLong = res.toLong()
+        if (res == resLong.toDouble()) {
+            tvResultado.text = resLong.toString()
+        } else {
+            tvResultado.text = String.format("%.4f", res)
+        }
+    } catch (e: Exception) {
+        tvResultado.text = "Error"
     }
 }
