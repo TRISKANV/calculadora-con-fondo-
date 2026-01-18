@@ -1,11 +1,12 @@
 package com.tuapp.calculadora
 
 import android.os.Bundle
-import android.webkit.WebSettings
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 
 class NavegadorActivity : AppCompatActivity() {
@@ -18,32 +19,32 @@ class NavegadorActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         val etUrl = findViewById<EditText>(R.id.etUrl)
-        val btnIr = findViewById<Button>(R.id.btnIr)
+        val btnIr = findViewById<ImageButton>(R.id.btnIr)
+        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
-        // Configuración profesional del navegador
-        webView.webViewClient = WebViewClient() // Abre los links dentro de la app, no en Chrome
-        val settings = webView.settings
-        settings.javaScriptEnabled = true // Permite páginas modernas
-        settings.domStorageEnabled = true // Permite que carguen bien los sitios
+        // Configuración de Privacidad y Rendimiento
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.webViewClient = WebViewClient() 
+        
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                progressBar.visibility = if (newProgress < 100) android.view.View.VISIBLE else android.view.View.GONE
+                progressBar.progress = newProgress
+            }
+        }
 
+        // Cargar Google por defecto
         webView.loadUrl("https://www.google.com")
 
         btnIr.setOnClickListener {
-            val url = etUrl.text.toString()
-            if (url.startsWith("http")) {
-                webView.loadUrl(url)
-            } else {
-                webView.loadUrl("https://www.google.com/search?q=$url")
-            }
+            var url = etUrl.text.toString()
+            if (!url.startsWith("http")) url = "https://www.google.com/search?q=$url"
+            webView.loadUrl(url)
         }
     }
 
-    // Para que al tocar "atrás" no se cierre la app, sino que vuelva a la página anterior
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 }
