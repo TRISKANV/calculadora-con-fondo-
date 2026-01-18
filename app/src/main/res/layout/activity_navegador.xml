@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -11,30 +12,40 @@
         android:orientation="horizontal"
         android:padding="8dp"
         android:gravity="center_vertical"
-        android:background="#1C1C1C">
+        android:background="#1F1F1F"
+        android:elevation="4dp">
+
+        <Spinner
+            android:id="@+id/spinnerMotor"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="4dp"
+            android:backgroundTint="#FFFFFF"
+            android:dropDownSelector="@android:drawable/list_selector_background" />
 
         <EditText
             android:id="@+id/etUrl"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:background="@android:drawable/editbox_background_normal"
-            android:hint="Buscar o escribir URL..."
+            android:background="@drawable/custom_input_background"
+            android:hint="Buscar o URL..."
             android:paddingStart="12dp"
+            android:paddingEnd="12dp"
             android:textColor="#FFFFFF"
-            android:textColorHint="#808080"
+            android:textColorHint="#999999"
             android:textSize="14sp"
             android:inputType="textUri"
-            android:imeOptions="actionGo"/>
+            android:imeOptions="actionGo" />
 
         <ImageButton
             android:id="@+id/btnIr"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@android:drawable/ic_menu_send"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Ir"
-            android:tint="#FFFFFF" />
+            app:tint="#00E676"
+            android:contentDescription="Ir" />
     </LinearLayout>
 
     <ProgressBar
@@ -42,12 +53,14 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="3dp"
-        android:visibility="gone"
-        android:progressTint="#00E676"/>
+        android:progressDrawable="@android:drawable/progress_horizontal"
+        android:progressTint="#00E676"
+        android:visibility="gone" />
 
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:background="#121212" />
 
 </LinearLayout>
