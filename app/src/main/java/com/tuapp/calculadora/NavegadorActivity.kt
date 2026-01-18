@@ -1,9 +1,7 @@
 package com.tuapp.calculadora
 
 import android.os.Bundle
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 
@@ -22,7 +20,23 @@ class NavegadorActivity : AppCompatActivity() {
         val spinnerMotor = findViewById<Spinner>(R.id.spinnerMotor)
         val progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
-        // Configuración del Selector de Motores
+        // 
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true // 
+            databaseEnabled = true
+            cacheMode = WebSettings.LOAD_DEFAULT // 
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            setSupportZoom(true)
+            builtInZoomControls = true
+            displayZoomControls = false
+        }
+
+        // Renderizado acelerado
+        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+
+        // --- CONFIGURACIÓN DE MOTORES ---
         val motores = arrayOf("Google", "DuckDuckGo", "StartPage", "Mojeek")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, motores)
         spinnerMotor.adapter = adapter
@@ -39,9 +53,12 @@ class NavegadorActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Configuración del WebView (Privacidad)
-        webView.settings.javaScriptEnabled = true
-        webView.webViewClient = WebViewClient()
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                return false // Permite que los enlaces se abran dentro de la misma app
+            }
+        }
+
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 progressBar.visibility = if (newProgress < 100) android.view.View.VISIBLE else android.view.View.GONE
