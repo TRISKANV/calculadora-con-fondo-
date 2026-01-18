@@ -10,14 +10,15 @@ class BovedaActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // ESTA LÍNEA es la que conecta con activity_boveda.xml
         setContentView(R.layout.activity_boveda)
 
         val btnMenu = findViewById<ImageButton>(R.id.btnMenu)
 
-        btnMenu.setOnClickListener { view ->
+        btnMenu?.setOnClickListener { view ->
             val popup = PopupMenu(this, view)
             
-            // Agregamos las opciones al menú directamente desde el código
+            // Creamos el menú igual al de la imagen
             popup.menu.add("📷 Fotos")
             popup.menu.add("🎥 Videos")
             popup.menu.add("🌐 Internet")
@@ -27,10 +28,10 @@ class BovedaActivity : AppCompatActivity() {
 
             popup.setOnMenuItemClickListener { item ->
                 when (item.title) {
-                    "📷 Fotos" -> Toast.makeText(this, "Abriendo Galería...", Toast.LENGTH_SHORT).show()
-                    "🎥 Videos" -> Toast.makeText(this, "Abriendo Videos...", Toast.LENGTH_SHORT).show()
-                    "🌐 Internet" -> Toast.makeText(this, "Navegador Seguro...", Toast.LENGTH_SHORT).show()
-                    "📝 Notas" -> Toast.makeText(this, "Mis Notas...", Toast.LENGTH_SHORT).show()
+                    "📷 Fotos" -> Toast.makeText(this, "Sección Fotos", Toast.LENGTH_SHORT).show()
+                    "🎥 Videos" -> Toast.makeText(this, "Sección Videos", Toast.LENGTH_SHORT).show()
+                    "🌐 Internet" -> Toast.makeText(this, "Navegador Seguro", Toast.LENGTH_SHORT).show()
+                    "📝 Notas" -> Toast.makeText(this, "Mis Notas", Toast.LENGTH_SHORT).show()
                     "❌ Salir" -> finish()
                 }
                 true
