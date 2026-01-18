@@ -16,16 +16,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvExpresion: TextView
     private lateinit var tvResultado: TextView
     
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_main)
 
-        tvExpresion = findViewById(R.id.tvExpresion)
-        tvResultado = findViewById(R.id.tvResultado)
+    tvExpresion = findViewById(R.id.tvExpresion)
+    tvResultado = findViewById(R.id.tvResultado)
 
-        val root = findViewById<ViewGroup>(R.id.rootLayout)
-        configurarTodosLosBotones(root)
+    val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
+    val passGuardada = prefs.getString("clave", null)
+
+    // 
+    if (passGuardada == null) {
+        tvExpresion.text = "Crea tu contraseña"
     }
+
+    val root = findViewById<ViewGroup>(R.id.rootLayout)
+    configurarTodosLosBotones(root)
+}
 
     private fun configurarTodosLosBotones(view: View) {
         val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
@@ -64,24 +72,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun alPresionarBoton(valor: String) {
-        when (valor) {
-            "AC" -> {
-                tvExpresion.text = ""
-                tvResultado.text = "0"
-            }
-            "DEL" -> {
-                val s = tvExpresion.text.toString()
-                if (s.isNotEmpty()) tvExpresion.text = s.dropLast(1)
-            }
-            "×" -> tvExpresion.append("*")
-            "÷" -> tvExpresion.append("/")
-            "π" -> tvExpresion.append("3.14159")
-            "e" -> tvExpresion.append("2.71828")
-            "sin", "cos", "tan", "log", "ln" -> tvExpresion.append("$valor(")
-            else -> tvExpresion.append(valor)
-        }
+   private fun alPresionarBoton(valor: String) {
+    // Si el texto actual es el mensaje de bienvenida, lo borramos antes de escribir el número
+    if (tvExpresion.text.toString() == "Crea tu contraseña") {
+        tvExpresion.text = ""
     }
+
+    when (valor) {
+        "AC" -> {
+            tvExpresion.text = ""
+            tvResultado.text = "0"
+        }
+        "DEL" -> {
+            val s = tvExpresion.text.toString()
+            if (s.isNotEmpty()) tvExpresion.text = s.dropLast(1)
+        }
+        "×" -> tvExpresion.append("*")
+        "÷" -> tvExpresion.append("/")
+        "π" -> tvExpresion.append("3.14159")
+        "e" -> tvExpresion.append("2.71828")
+        "sin", "cos", "tan", "log", "ln" -> tvExpresion.append("$valor(")
+        else -> tvExpresion.append(valor)
+    }
+}
 
     private fun ejecutarCalculo() {
         var texto = tvExpresion.text.toString()
