@@ -1,64 +1,88 @@
 package com.tuapp.calculadora
 
-import android.content.Context
 import android.os.Bundle
-import android.widget.EditText
-import androidx.appcompat.app.AlertDialog
+import android.view.inputmethod.EditorInfo
+import android.webkit.*
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-class NotasActivity : AppCompatActivity() {
+class NavegadorActivity : AppCompatActivity() {
 
-    private lateinit var rvNotas: RecyclerView
-    private lateinit var adapter: NotasAdapter
-    private var listaNotas = mutableListOf<String>()
+    private lateinit var webView: WebView
+    private var motorSeleccionado = "https://www.google.com/search?q="
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_notas)
+        setContentView(R.layout.activity_navegador)
 
-        rvNotas = findViewById(R.id.rvNotas)
-        val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddNota)
+        webView = findViewById(R.id.webView)
+        val etUrl = findViewById<EditText>(R.id.etUrl)
+        val btnIr = findViewById<ImageButton>(R.id.btnIr)
+        val spinnerMotor = findViewById<Spinner>(R.id.spinnerMotor)
+        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
-        rvNotas.layoutManager = LinearLayoutManager(this)
-        cargarNotas()
+        // --- OPTIMIZACIÓN DE WEBVIEW ---
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+        }
+        webView.webViewClient = WebViewClient()
 
-        fabAdd.setOnClickListener {
-            mostrarDialogoNuevaNota()
+        // --- SELECTOR DE MOTORES (Texto por ahora) ---
+        val motores = arrayOf("Google", "DuckDuckGo", "StartPage", "Mojeek")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, motores)
+        spinnerMotor.adapter = adapter
+
+        spinnerMotor.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                motorSeleccionado = when (position) {
+                    1 -> "https://duckduckgo.com/?q="
+                    2 -> "https://www.startpage.com/do/search?query="
+                    3 -> "https://www.mojeek.com/search?q="
+                    else -> "https://www.google.com/search?q="
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // --- MEJORA: BOTÓN ENTER DEL TECLADO ---
+        etUrl.setOnEditorActionListener { _, actionId, _ ->
+            // Detecta "Ir", "Buscar" o "Listo" en el teclado
+            if (actionId == EditorInfo.IME_ACTION_GO || 
+                actionId == EditorInfo.IME_ACTION_SEARCH || 
+                actionId == EditorInfo.IME_ACTION_DONE) {
+                ejecutarBusqueda(etUrl.text.toString())
+                true
+            } else {
+                false
+            }
+        }
+
+        btnIr.setOnClickListener { ejecutarBusqueda(etUrl.text.toString()) }
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                progressBar.visibility = if (newProgress < 100) android.view.View.VISIBLE else android.view.View.GONE
+                progressBar.progress = newProgress
+            }
         }
     }
 
-    private fun cargarNotas() {
-        val prefs = getSharedPreferences("NotasEncriptadas", Context.MODE_PRIVATE)
-        val notasSet = prefs.getStringSet("mis_notas", mutableSetOf()) ?: mutableSetOf()
-        listaNotas = notasSet.toMutableList()
-        adapter = NotasAdapter(listaNotas)
-        rvNotas.adapter = adapter
-    }
-
-    private fun mostrarDialogoNuevaNota() {
-        val input = EditText(this)
-        input.setPadding(50, 40, 50, 40)
+    private fun ejecutarBusqueda(entrada: String) {
+        if (entrada.isEmpty()) return
+        val url = entrada.trim()
         
-        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle("Nueva Nota Privada")
-            .setView(input)
-            .setPositiveButton("Guardar") { _, _ ->
-                val texto = input.text.toString()
-                if (texto.isNotEmpty()) {
-                    guardarNota(texto)
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        if (url.startsWith("http")) {
+            webView.loadUrl(url)
+        } else if (url.contains(".") && !url.contains(" ")) {
+            webView.loadUrl("https://$url")
+        } else {
+            webView.loadUrl(motorSeleccionado + url)
+        }
     }
 
-    private fun guardarNota(texto: String) {
-        val prefs = getSharedPreferences("NotasEncriptadas", Context.MODE_PRIVATE)
-        listaNotas.add(texto)
-        prefs.edit().putStringSet("mis_notas", listaNotas.toSet()).apply()
-        adapter.notifyDataSetChanged() // Refresca la lista al instante
+    override fun onBackPressed() {
+        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 }
