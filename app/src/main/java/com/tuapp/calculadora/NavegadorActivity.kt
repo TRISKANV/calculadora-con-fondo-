@@ -1,6 +1,7 @@
 package com.tuapp.calculadora
 
 import android.os.Bundle
+import android.view.inputmethod.EditorInfo
 import android.webkit.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -20,59 +21,59 @@ class NavegadorActivity : AppCompatActivity() {
         val spinnerMotor = findViewById<Spinner>(R.id.spinnerMotor)
         val progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
-        // 
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true // 
-            databaseEnabled = true
-            cacheMode = WebSettings.LOAD_DEFAULT // 
-            useWideViewPort = true
-            loadWithOverviewMode = true
-            setSupportZoom(true)
-            builtInZoomControls = true
-            displayZoomControls = false
-        }
+        // --- OPTIMIZACIÓN DE WEBVIEW ---
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
+        webView.webViewClient = WebViewClient()
 
-        // Renderizado acelerado
-        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
-
-        // --- CONFIGURACIÓN DE MOTORES ---
+        // --- MEJORA 1: LOGOS DINÁMICOS ---
         val motores = arrayOf("Google", "DuckDuckGo", "StartPage", "Mojeek")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, motores)
         spinnerMotor.adapter = adapter
 
         spinnerMotor.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                motorSeleccionado = when (motores[position]) {
-                    "DuckDuckGo" -> "https://duckduckgo.com/?q="
-                    "StartPage" -> "https://www.startpage.com/do/search?query="
-                    "Mojeek" -> "https://www.mojeek.com/search?q="
-                    else -> "https://www.google.com/search?q="
+                when (motores[position]) {
+                    "DuckDuckGo" -> {
+                        motorSeleccionado = "https://duckduckgo.com/?q="
+                        // Aquí podrías cambiar el ícono si tuvieras los drawables
+                        // btnIr.setImageResource(R.drawable.logo_duck) 
+                    }
+                    "StartPage" -> motorSeleccionado = "https://www.startpage.com/do/search?query="
+                    "Mojeek" -> motorSeleccionado = "https://www.mojeek.com/search?q="
+                    else -> motorSeleccionado = "https://www.google.com/search?q="
                 }
+                Toast.makeText(this@NavegadorActivity, "Motor: ${motores[position]}", Toast.LENGTH_SHORT).show()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                return false // Permite que los enlaces se abran dentro de la misma app
-            }
-        }
-
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                progressBar.visibility = if (newProgress < 100) android.view.View.VISIBLE else android.view.View.GONE
-                progressBar.progress = newProgress
+        // --- MEJORA 2: BOTÓN ENTER DEL TECLADO ---
+        etUrl.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
+                ejecutarBusqueda(etUrl.text.toString())
+                true
+            } else {
+                false
             }
         }
 
         btnIr.setOnClickListener {
-            var url = etUrl.text.toString()
-            if (url.startsWith("http")) {
-                webView.loadUrl(url)
-            } else {
-                webView.loadUrl(motorSeleccionado + url)
-            }
+            ejecutarBusqueda(etUrl.text.toString())
+        }
+    }
+
+    private fun ejecutarBusqueda(entrada: String) {
+        var url = entrada
+        if (url.isEmpty()) return
+        
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            webView.loadUrl(url)
+        } else if (url.contains(".") && !url.contains(" ")) {
+            webView.loadUrl("https://$url")
+        } else {
+            webView.loadUrl(motorSeleccionado + url)
         }
     }
 
