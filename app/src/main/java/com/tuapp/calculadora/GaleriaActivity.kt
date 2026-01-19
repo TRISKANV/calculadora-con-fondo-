@@ -27,7 +27,7 @@ class GaleriaActivity : AppCompatActivity() {
         rvGaleria = findViewById(R.id.rvGaleria)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddFoto)
 
-        // Configuración de la cuadrícula 
+        // Configuración de la cuadrícula (3 columnas)
         rvGaleria.layoutManager = GridLayoutManager(this, 3)
         
         cargarFotosDesdeBoveda()
@@ -58,7 +58,7 @@ class GaleriaActivity : AppCompatActivity() {
         // Configuramos el adaptador con las funciones de Click y Borrar
         adapter = GaleriaAdapter(listaFotos, 
             onFotoClick = { posicion ->
-                // 
+                // Paso siguiente: Abrir el visor con Swipe y Zoom
                 val intent = Intent(this, VisorActivity::class.java)
                 intent.putExtra("posicion", posicion)
                 startActivity(intent)
@@ -77,7 +77,7 @@ class GaleriaActivity : AppCompatActivity() {
             val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
             val archivoDestino = File(carpetaPrivada, nombreArchivo)
 
-            // 
+            // Copiamos el archivo a nuestra zona privada
             val outputStream = FileOutputStream(archivoDestino)
             inputStream?.use { input ->
                 outputStream.use { output ->
@@ -85,13 +85,13 @@ class GaleriaActivity : AppCompatActivity() {
                 }
             }
 
-            // 
-            // 
+            // BORRADO DE LA GALERÍA PÚBLICA (Para que desaparezca del celu)
+            // Nota: En Android 11+ el sistema pedirá una confirmación extra.
             contentResolver.delete(uriOriginal, null, null)
 
             Toast.makeText(this, "Foto protegida", Toast.LENGTH_SHORT).show()
             
-            // 
+            // Recargamos la lista completa para ver la nueva foto
             cargarFotosDesdeBoveda()
             
         } catch (e: Exception) {
@@ -106,12 +106,12 @@ class GaleriaActivity : AppCompatActivity() {
         
         if (archivoABorrar.exists()) {
             if (archivoABorrar.delete()) {
-                // 
-                //  
+                // REPARACIÓN DEL ERROR DE BORRADO:
+                // 1. Borramos de la lista de datos
                 listaFotos.removeAt(posicion)
-                // 
+                // 2. Avisamos al adaptador que ese ítem ya no está
                 adapter.notifyItemRemoved(posicion)
-                // 
+                // 3. Re-sincronizamos los índices para que el siguiente borrado sea correcto
                 adapter.notifyItemRangeChanged(posicion, listaFotos.size)
                 
                 Toast.makeText(this, "Eliminado correctamente", Toast.LENGTH_SHORT).show()
