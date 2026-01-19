@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="120dp">
+    android:layout_height="120dp"
+    android:layout_margin="2dp">
 
     <ImageView
-        android:id="@+id/imgMiniatura"
+        android:id="@+id/ivThumbnail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop" />
+        android:scaleType="centerCrop"
+        android:background="#2C2C2C" />
 
-    <ImageView
-        android:id="@+id/imgPlayIcon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="center"
-        android:src="@android:drawable/ic_media_play"
-        android:visibility="gone" />
+    <ImageButton
+        android:id="@+id/btnBorrarFoto"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="4dp"
+        android:background="#99000000"
+        android:src="@android:drawable/ic_menu_delete"
+        app:tint="#FF4444" />
 
 </FrameLayout>
