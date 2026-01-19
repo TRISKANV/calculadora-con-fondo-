@@ -50,7 +50,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun alPresionarBoton(valor: String) {
-        if (tvExpresion.text.toString() == "Crea tu contraseña") {
+        val actual = tvExpresion.text.toString()
+        
+        if (actual == "Crea tu contraseña") {
             tvExpresion.text = ""
         }
 
@@ -60,16 +62,25 @@ class MainActivity : AppCompatActivity() {
                 tvResultado.text = "0"
             }
             "DEL" -> {
-                val s = tvExpresion.text.toString()
-                if (s.isNotEmpty()) tvExpresion.text = s.dropLast(1)
+                if (actual.isNotEmpty()) tvExpresion.text = actual.dropLast(1)
             }
-            "×" -> tvExpresion.append("*")
-            "÷" -> tvExpresion.append("/")
+            ".", "+", "-", "×", "÷" -> {
+                // REGLA DE ORO: No repetir operadores ni empezar con ellos (excepto el menos)
+                if (actual.isNotEmpty()) {
+                    val ultimoChar = actual.last().toString()
+                    if (ultimoChar == "+" || ultimoChar == "-" || ultimoChar == "×" || ultimoChar == "÷" || ultimoChar == ".") {
+                        tvExpresion.text = actual.dropLast(1) + valor.replace("×", "*").replace("÷", "/")
+                    } else {
+                        tvExpresion.append(valor.replace("×", "*").replace("÷", "/"))
+                    }
+                } else if (valor == "-") {
+                    tvExpresion.append("-")
+                }
+            }
             "sin", "cos", "tan", "log", "ln" -> tvExpresion.append("$valor(")
             else -> tvExpresion.append(valor)
         }
         
-        // Calcular en tiempo real mientras el usuario escribe, sin mostrar errores
         ejecutarCalculo(false)
     }
 
@@ -79,7 +90,8 @@ class MainActivity : AppCompatActivity() {
         val passGuardada = prefs.getString("clave", null)
 
         if (passGuardada == null) {
-            if (entrada.length >= 4 && !entrada.contains(Regex("[+/*×÷-]"))) {
+            // Lógica de creación de clave (solo números)
+            if (entrada.length >= 4 && entrada.all { it.isDigit() }) {
                 prefs.edit().putString("clave", entrada).apply()
                 Toast.makeText(this, "✅ CLAVE GUARDADA", Toast.LENGTH_LONG).show()
                 tvExpresion.text = ""
@@ -90,8 +102,10 @@ class MainActivity : AppCompatActivity() {
         } else if (entrada == passGuardada) {
             startActivity(Intent(this, BovedaActivity::class.java))
         } else {
-            ejecutarCalculo(true) // Forzar resultado final
-            tvExpresion.text = tvResultado.text
+            ejecutarCalculo(true)
+            if (tvResultado.text != "Error") {
+                tvExpresion.text = tvResultado.text
+            }
         }
     }
 
@@ -100,26 +114,27 @@ class MainActivity : AppCompatActivity() {
         if (texto.isEmpty()) return
 
         try {
-            // 1. Limpieza de caracteres visuales
             texto = texto.replace("×", "*").replace("÷", "/")
             
-            // 2. AUTO-CIERRE DE PARÉNTESIS (La magia para evitar el error sin(32 )
-            val parentesisAbiertos = texto.count { it == '(' }
-            val parentesisCerrados = texto.count { it == ')' }
-            for (i in 1..(parentesisAbiertos - parentesisCerrados)) {
-                texto += ")"
-            }
+            // Auto-cierre de paréntesis
+            val abiertos = texto.count { it == '(' }
+            val cerrados = texto.count { it == ')' }
+            for (i in 1..(abiertos - cerrados)) texto += ")"
 
             val expresion = ExpressionBuilder(texto).build()
             val res = expresion.evaluate()
             
+            // Manejo de División por Cero
+            if (res.isInfinite() || res.isNaN()) {
+                tvResultado.text = "Error"
+                return
+            }
+
             val resLong = res.toLong()
-            val resultadoStr = if (res == resLong.toDouble()) resLong.toString() else String.format("%.4f", res)
+            tvResultado.text = if (res == resLong.toDouble()) resLong.toString() else String.format("%.4f", res)
             
-            tvResultado.text = resultadoStr
         } catch (e: Exception) {
             if (esFinal) tvResultado.text = "Error"
-            // Si no es final, simplemente no actualizamos el resultado para no molestar al usuario
         }
     }
 }
