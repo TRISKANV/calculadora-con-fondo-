@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         ejecutarCalculo(false)
     }
 
-    private fun procesarIgual() {
+  private fun procesarIgual() {
         val entrada = tvExpresion.text.toString()
         val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
         val passGuardada = prefs.getString("clave", null)
@@ -100,6 +100,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Escribí 4 números y tocá =", Toast.LENGTH_SHORT).show()
             }
         } else if (entrada == passGuardada) {
+            // --- MEJORA DE SEGURIDAD 
+            tvExpresion.text = ""  // Borramos la clave de la pantalla
+            tvResultado.text = "0" // Reiniciamos el resultado
+            
+            // Entramos a la bóveda
             startActivity(Intent(this, BovedaActivity::class.java))
         } else {
             ejecutarCalculo(true)
