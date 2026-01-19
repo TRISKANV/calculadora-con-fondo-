@@ -23,12 +23,8 @@ class MainActivity : AppCompatActivity() {
         tvExpresion = findViewById(R.id.tvExpresion)
         tvResultado = findViewById(R.id.tvResultado)
 
-        // --- LÓGICA DE BIENVENIDA ---
         val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
-        val passGuardada = prefs.getString("clave", null)
-
-        // Si no hay clave en la memoria, mostramos el mensaje inicial
-        if (passGuardada == null) {
+        if (prefs.getString("clave", null) == null) {
             tvExpresion.text = "Crea tu contraseña"
         }
 
@@ -37,37 +33,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configurarTodosLosBotones(view: View) {
-        val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
-
         if (view is Button) {
-            val texto = view.text.toString()
-
-            if (texto == "=") {
-                view.setOnClickListener {
-                    val entrada = tvExpresion.text.toString()
-                    val passGuardada = prefs.getString("clave", null)
-
-                    if (passGuardada == null) {
-                        // Registro por primera vez
-                        if (entrada.length >= 4 && !entrada.contains(Regex("[+/*×÷-]"))) {
-                            prefs.edit().putString("clave", entrada).apply()
-                            Toast.makeText(this, "✅ CLAVE GUARDADA", Toast.LENGTH_LONG).show()
-                            tvExpresion.text = ""
-                            tvResultado.text = "0"
-                        } else {
-                            Toast.makeText(this, "Escribí 4 números y tocá =", Toast.LENGTH_SHORT).show()
-                        }
-                    } else if (entrada == passGuardada) {
-                        // Entrada a la Bóveda
-                        val intent = Intent(this, BovedaActivity::class.java)
-                        startActivity(intent)
-                    } else {
-                        // Si no es la clave, es una cuenta normal
-                        ejecutarCalculo()
-                    }
+            view.setOnClickListener {
+                val textoBoton = view.text.toString()
+                if (textoBoton == "=") {
+                    procesarIgual()
+                } else {
+                    alPresionarBoton(textoBoton)
                 }
-            } else {
-                view.setOnClickListener { alPresionarBoton(texto) }
             }
         } else if (view is ViewGroup) {
             for (i in 0 until view.childCount) {
@@ -77,7 +50,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun alPresionarBoton(valor: String) {
-        // Si el texto de "Crea tu contraseña" está visible, lo borramos al empezar a escribir
         if (tvExpresion.text.toString() == "Crea tu contraseña") {
             tvExpresion.text = ""
         }
@@ -93,25 +65,61 @@ class MainActivity : AppCompatActivity() {
             }
             "×" -> tvExpresion.append("*")
             "÷" -> tvExpresion.append("/")
-            "π" -> tvExpresion.append("3.14159")
-            "e" -> tvExpresion.append("2.71828")
             "sin", "cos", "tan", "log", "ln" -> tvExpresion.append("$valor(")
             else -> tvExpresion.append(valor)
         }
+        
+        // Calcular en tiempo real mientras el usuario escribe, sin mostrar errores
+        ejecutarCalculo(false)
     }
 
-    private fun ejecutarCalculo() {
+    private fun procesarIgual() {
+        val entrada = tvExpresion.text.toString()
+        val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
+        val passGuardada = prefs.getString("clave", null)
+
+        if (passGuardada == null) {
+            if (entrada.length >= 4 && !entrada.contains(Regex("[+/*×÷-]"))) {
+                prefs.edit().putString("clave", entrada).apply()
+                Toast.makeText(this, "✅ CLAVE GUARDADA", Toast.LENGTH_LONG).show()
+                tvExpresion.text = ""
+                tvResultado.text = "0"
+            } else {
+                Toast.makeText(this, "Escribí 4 números y tocá =", Toast.LENGTH_SHORT).show()
+            }
+        } else if (entrada == passGuardada) {
+            startActivity(Intent(this, BovedaActivity::class.java))
+        } else {
+            ejecutarCalculo(true) // Forzar resultado final
+            tvExpresion.text = tvResultado.text
+        }
+    }
+
+    private fun ejecutarCalculo(esFinal: Boolean) {
         var texto = tvExpresion.text.toString()
-        if (texto.isEmpty() || texto == "Crea tu contraseña") return
-        
+        if (texto.isEmpty()) return
+
         try {
+            // 1. Limpieza de caracteres visuales
             texto = texto.replace("×", "*").replace("÷", "/")
+            
+            // 2. AUTO-CIERRE DE PARÉNTESIS (La magia para evitar el error sin(32 )
+            val parentesisAbiertos = texto.count { it == '(' }
+            val parentesisCerrados = texto.count { it == ')' }
+            for (i in 1..(parentesisAbiertos - parentesisCerrados)) {
+                texto += ")"
+            }
+
             val expresion = ExpressionBuilder(texto).build()
             val res = expresion.evaluate()
+            
             val resLong = res.toLong()
-            tvResultado.text = if (res == resLong.toDouble()) resLong.toString() else String.format("%.4f", res)
+            val resultadoStr = if (res == resLong.toDouble()) resLong.toString() else String.format("%.4f", res)
+            
+            tvResultado.text = resultadoStr
         } catch (e: Exception) {
-            tvResultado.text = "Error"
+            if (esFinal) tvResultado.text = "Error"
+            // Si no es final, simplemente no actualizamos el resultado para no molestar al usuario
         }
     }
 }
