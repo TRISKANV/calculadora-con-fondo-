@@ -5,19 +5,19 @@
     android:background="#000000">
 
     <VideoView
-        android:id="@+id/videoView"
+        android:id="@+id/videoViewPrincipal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true" />
 
     <ImageButton
-        android:id="@+id/btnEliminarVideo"
+        android:id="@+id/btnCerrarReproductor"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_margin="20dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_delete"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
         android:tint="#FFFFFF" />
 </RelativeLayout>
