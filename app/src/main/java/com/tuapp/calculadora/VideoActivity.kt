@@ -22,20 +22,21 @@ class VideoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_video) // Revisa que este sea tu XML de lista de videos
+        setContentView(R.layout.activity_video) // Asegúrate que este XML exista en layout
 
         rvVideos = findViewById(R.id.rvVideos)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddVideo)
 
-        rvVideos.layoutManager = GridLayoutManager(this, 2) // 2 columnas porque son videos
+        // Configuramos la cuadrícula de videos (2 columnas)
+        rvVideos.layoutManager = GridLayoutManager(this, 2)
         
-        cargarVideosDesdeBoveda()
+        actualizarLista()
 
+        // Configuración para elegir video de la galería
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val uri = result.data?.data
-                if (uri != null) {
-                    importarVideoABoveda(uri)
+                result.data?.data?.let { uri ->
+                    guardarVideoEnBoveda(uri)
                 }
             }
         }
@@ -46,58 +47,54 @@ class VideoActivity : AppCompatActivity() {
         }
     }
 
-    private fun cargarVideosDesdeBoveda() {
-        val carpetaPrivada = File(getExternalFilesDir(null), "VideosSecretos")
-        if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
+    private fun actualizarLista() {
+        val carpeta = File(getExternalFilesDir(null), "VideosSecretos")
+        if (!carpeta.exists()) carpeta.mkdirs()
         
-        listaVideos = carpetaPrivada.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
+        listaVideos = carpeta.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
         
         adapter = VideoAdapter(listaVideos, 
             onVideoClick = { archivo ->
+                // AQUÍ SE CONECTA CON EL REPRODUCTOR
                 val intent = Intent(this, ReproductorActivity::class.java)
                 intent.putExtra("videoPath", archivo.absolutePath)
                 startActivity(intent)
             },
             onVideoDelete = { posicion ->
-                borrarVideo(posicion)
+                eliminarVideo(posicion)
             }
         )
         rvVideos.adapter = adapter
     }
 
-    private fun importarVideoABoveda(uriOriginal: Uri) {
+    private fun guardarVideoEnBoveda(uri: Uri) {
         try {
-            val inputStream = contentResolver.openInputStream(uriOriginal)
-            val nombreArchivo = "VIDEO_SEC_${System.currentTimeMillis()}.mp4"
-            val carpetaPrivada = File(getExternalFilesDir(null), "VideosSecretos")
-            val archivoDestino = File(carpetaPrivada, nombreArchivo)
+            val inputStream = contentResolver.openInputStream(uri)
+            val carpeta = File(getExternalFilesDir(null), "VideosSecretos")
+            val archivoDestino = File(carpeta, "VIDEO_${System.currentTimeMillis()}.mp4")
 
-            val outputStream = FileOutputStream(archivoDestino)
             inputStream?.use { input ->
-                outputStream.use { output ->
+                FileOutputStream(archivoDestino).use { output ->
                     input.copyTo(output)
                 }
             }
-
-            // Intentar borrar el original de la galería pública
-            contentResolver.delete(uriOriginal, null, null)
-
-            Toast.makeText(this, "Video guardado", Toast.LENGTH_SHORT).show()
-            cargarVideosDesdeBoveda()
             
+            // Opcional: Intentar borrar el original si tienes permisos
+            // contentResolver.delete(uri, null, null)
+
+            Toast.makeText(this, "Video ocultado con éxito", Toast.LENGTH_SHORT).show()
+            actualizarLista()
         } catch (e: Exception) {
-            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error al guardar video", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun borrarVideo(posicion: Int) {
-        if (posicion in listaVideos.indices) {
-            val archivo = listaVideos[posicion]
-            if (archivo.delete()) {
-                listaVideos.removeAt(posicion)
-                adapter.notifyItemRemoved(posicion)
-                adapter.notifyItemRangeChanged(posicion, listaVideos.size)
-            }
+    private fun eliminarVideo(posicion: Int) {
+        val archivo = listaVideos[posicion]
+        if (archivo.delete()) {
+            listaVideos.removeAt(posicion)
+            adapter.notifyItemRemoved(posicion)
+            Toast.makeText(this, "Video eliminado", Toast.LENGTH_SHORT).show()
         }
     }
 }
