@@ -6,7 +6,7 @@ import android.webkit.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 
-class NavegadorActivity : AppCompatActivity() {
+class NotasActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private var motorSeleccionado = "https://www.google.com/search?q="
