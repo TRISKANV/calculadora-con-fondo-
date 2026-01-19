@@ -21,6 +21,7 @@ class ReproductorActivity : AppCompatActivity() {
             val uri = Uri.parse(videoPath)
             videoView.setVideoURI(uri)
 
+            // Controles de reproducción (Play/Pausa)
             val mediaController = MediaController(this)
             mediaController.setAnchorView(videoView)
             videoView.setMediaController(mediaController)
@@ -28,6 +29,9 @@ class ReproductorActivity : AppCompatActivity() {
             videoView.start()
         }
 
-        btnCerrar?.setOnClickListener { finish() }
+        // Al tocar la X, se cierra y vuelve a la lista de videos
+        btnCerrar?.setOnClickListener { 
+            finish() 
+        }
     }
 }
