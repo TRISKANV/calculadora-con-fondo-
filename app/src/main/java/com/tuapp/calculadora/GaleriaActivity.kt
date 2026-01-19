@@ -17,8 +17,8 @@ import java.io.FileOutputStream
 class GaleriaActivity : AppCompatActivity() {
 
     private lateinit var rvGaleria: RecyclerView
+    private lateinit var adapter: GaleriaAdapter
     private var listaFotos = mutableListOf<File>()
-    private lateinit var adapter: GaleriaAdapter // 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,12 +27,12 @@ class GaleriaActivity : AppCompatActivity() {
         rvGaleria = findViewById(R.id.rvGaleria)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddFoto)
 
-        // 
+        // Configuración de la cuadrícula 
         rvGaleria.layoutManager = GridLayoutManager(this, 3)
         
         cargarFotosDesdeBoveda()
 
-        // 
+        // Lanzador para elegir fotos de la galería del sistema
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
@@ -49,23 +49,35 @@ class GaleriaActivity : AppCompatActivity() {
     }
 
     private fun cargarFotosDesdeBoveda() {
-        val directorio = File(getExternalFilesDir(null), "FotosSecretas")
-        if (!directorio.exists()) directorio.mkdirs()
+        val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
+        if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
         
-        listaFotos = directorio.listFiles()?.toMutableList() ?: mutableListOf()
-        //
+        // Obtenemos todos los archivos JPG/PNG de la carpeta
+        listaFotos = carpetaPrivada.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
+        
+        // Configuramos el adaptador con las funciones de Click y Borrar
+        adapter = GaleriaAdapter(listaFotos, 
+            onFotoClick = { posicion ->
+                // 
+                val intent = Intent(this, VisorActivity::class.java)
+                intent.putExtra("posicion", posicion)
+                startActivity(intent)
+            },
+            onFotoDelete = { posicion ->
+                borrarFotoDeBoveda(posicion)
+            }
+        )
+        rvGaleria.adapter = adapter
     }
 
     private fun importarFotoABoveda(uriOriginal: Uri) {
         try {
             val inputStream = contentResolver.openInputStream(uriOriginal)
-            val nombreArchivo = "HIDDEN_${System.currentTimeMillis()}.jpg"
+            val nombreArchivo = "SECRET_${System.currentTimeMillis()}.jpg"
             val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
-            if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
-
             val archivoDestino = File(carpetaPrivada, nombreArchivo)
 
-            // 1. Copiamos la foto a nuestra carpeta secreta
+            // 
             val outputStream = FileOutputStream(archivoDestino)
             inputStream?.use { input ->
                 outputStream.use { output ->
@@ -73,15 +85,37 @@ class GaleriaActivity : AppCompatActivity() {
                 }
             }
 
-            //  Intentamos borrar la original (Android pedirá permiso)
-            
+            // 
+            // 
             contentResolver.delete(uriOriginal, null, null)
 
-            Toast.makeText(this, "Foto movida a la bóveda", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Foto protegida", Toast.LENGTH_SHORT).show()
+            
+            // 
             cargarFotosDesdeBoveda()
             
         } catch (e: Exception) {
             Toast.makeText(this, "Error al importar: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun borrarFotoDeBoveda(posicion: Int) {
+        if (posicion !in listaFotos.indices) return
+
+        val archivoABorrar = listaFotos[posicion]
+        
+        if (archivoABorrar.exists()) {
+            if (archivoABorrar.delete()) {
+                // 
+                //  
+                listaFotos.removeAt(posicion)
+                // 
+                adapter.notifyItemRemoved(posicion)
+                // 
+                adapter.notifyItemRangeChanged(posicion, listaFotos.size)
+                
+                Toast.makeText(this, "Eliminado correctamente", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }
