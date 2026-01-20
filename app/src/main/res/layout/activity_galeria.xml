@@ -6,7 +6,7 @@
     android:background="#121212">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvFotos"
+        android:id="@+id/rvGaleria"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
@@ -19,7 +19,6 @@
         android:src="@android:drawable/ic_input_add"
         app:tint="#FFFFFF"
         app:backgroundTint="#008577"
-        app:fabSize="normal"
         android:contentDescription="Añadir Foto" />
 
 </FrameLayout>
