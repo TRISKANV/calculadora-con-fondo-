@@ -23,34 +23,34 @@ class BovedaActivity : AppCompatActivity() {
             drawerLayout.openDrawer(GravityCompat.END)
         }
 
-        navView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_fotos -> {
-                    // ACTIVADO: Ahora sí abre la Galería
-                    val intent = Intent(this, GaleriaActivity::class.java)
-                    startActivity(intent)
-                }
-                R.id.nav_videos -> {
-                    // ACTIVADO: Ahora sí abre los Videos
-                    val intent = Intent(this, VideoActivity::class.java)
-                    startActivity(intent)
-                }
-                R.id.nav_internet -> {
-                    val intent = Intent(this, NavegadorActivity::class.java)
-                    startActivity(intent)
-                }
-                R.id.nav_notas -> {
-                    val intent = Intent(this, NotasActivity::class.java)
-                    startActivity(intent)
-                }
-                R.id.nav_ajustes -> {
-                    Toast.makeText(this, "Ajustes de Seguridad", Toast.LENGTH_SHORT).show()
-                }
-            }
-            drawerLayout.closeDrawer(GravityCompat.END)
-            true
+       navView.setNavigationItemSelectedListener { menuItem ->
+    when (menuItem.itemId) {
+        R.id.nav_fotos -> {
+            // ELIMINADO EL TOAST:
+            val intent = Intent(this, GaleriaActivity::class.java)
+            startActivity(intent)
+        }
+        R.id.nav_videos -> {
+            // ELIMINADO EL TOAST: 
+            val intent = Intent(this, VideoActivity::class.java)
+            startActivity(intent)
+        }
+        R.id.nav_internet -> {
+            val intent = Intent(this, NavegadorActivity::class.java)
+            startActivity(intent)
+        }
+        R.id.nav_notas -> {
+            // ESTO abrirá NotasActivity
+            val intent = Intent(this, NotasActivity::class.java)
+            startActivity(intent)
+        }
+        R.id.nav_ajustes -> {
+            Toast.makeText(this, "Ajustes de Seguridad", Toast.LENGTH_SHORT).show()
         }
     }
+    drawerLayout.closeDrawer(GravityCompat.END)
+    true
+}
 
     override fun onBackPressed() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
