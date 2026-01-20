@@ -16,6 +16,7 @@ import java.io.FileOutputStream
 
 class GaleriaActivity : AppCompatActivity() {
 
+    // 1. Asegúrate de que estas tres líneas estén aquí arriba
     private lateinit var rvGaleria: RecyclerView
     private lateinit var adapter: GaleriaAdapter
     private var listaFotos = mutableListOf<File>()
@@ -24,15 +25,14 @@ class GaleriaActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_galeria)
 
+        // 2. Aquí es donde se vincula con el XML
         rvGaleria = findViewById(R.id.rvGaleria)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddFoto)
 
-        // Configuración de la cuadrícula (3 columnas)
         rvGaleria.layoutManager = GridLayoutManager(this, 3)
         
         cargarFotosDesdeBoveda()
 
-        // Lanzador para elegir fotos de la galería del sistema
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
@@ -52,13 +52,10 @@ class GaleriaActivity : AppCompatActivity() {
         val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
         if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
         
-        // Obtenemos todos los archivos JPG/PNG de la carpeta
         listaFotos = carpetaPrivada.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
         
-        // Configuramos el adaptador con las funciones de Click y Borrar
         adapter = GaleriaAdapter(listaFotos, 
             onFotoClick = { posicion ->
-                // Paso siguiente: Abrir el visor con Swipe y Zoom
                 val intent = Intent(this, VisorActivity::class.java)
                 intent.putExtra("posicion", posicion)
                 startActivity(intent)
@@ -77,7 +74,6 @@ class GaleriaActivity : AppCompatActivity() {
             val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
             val archivoDestino = File(carpetaPrivada, nombreArchivo)
 
-            // Copiamos el archivo a nuestra zona privada
             val outputStream = FileOutputStream(archivoDestino)
             inputStream?.use { input ->
                 outputStream.use { output ->
@@ -85,13 +81,9 @@ class GaleriaActivity : AppCompatActivity() {
                 }
             }
 
-            // BORRADO DE LA GALERÍA PÚBLICA (Para que desaparezca del celu)
-            // Nota: En Android 11+ el sistema pedirá una confirmación extra.
+            // Borrado de la galería pública
             contentResolver.delete(uriOriginal, null, null)
-
             Toast.makeText(this, "Foto protegida", Toast.LENGTH_SHORT).show()
-            
-            // Recargamos la lista completa para ver la nueva foto
             cargarFotosDesdeBoveda()
             
         } catch (e: Exception) {
@@ -101,19 +93,13 @@ class GaleriaActivity : AppCompatActivity() {
 
     private fun borrarFotoDeBoveda(posicion: Int) {
         if (posicion !in listaFotos.indices) return
-
         val archivoABorrar = listaFotos[posicion]
         
         if (archivoABorrar.exists()) {
             if (archivoABorrar.delete()) {
-                // REPARACIÓN DEL ERROR DE BORRADO:
-                // 1. Borramos de la lista de datos
                 listaFotos.removeAt(posicion)
-                // 2. Avisamos al adaptador que ese ítem ya no está
                 adapter.notifyItemRemoved(posicion)
-                // 3. Re-sincronizamos los índices para que el siguiente borrado sea correcto
                 adapter.notifyItemRangeChanged(posicion, listaFotos.size)
-                
                 Toast.makeText(this, "Eliminado correctamente", Toast.LENGTH_SHORT).show()
             }
         }
