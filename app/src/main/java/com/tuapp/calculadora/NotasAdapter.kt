@@ -11,10 +11,10 @@ class NotasAdapter(
     private val onClick: (Nota) -> Unit
 ) : RecyclerView.Adapter<NotasAdapter.NotaViewHolder>() {
 
-    class NotaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvTitulo: TextView = view.findViewById(R.id.tvNotaTitulo)
-        val tvPreview: TextView = view.findViewById(R.id.tvNotaPreview)
-    }
+   class NotaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    val tvContenido: TextView = view.findViewById(R.id.tvContenidoNota)
+    val tvFecha: TextView = view.findViewById(R.id.tvFechaNota)
+}
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotaViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_nota, parent, false)
