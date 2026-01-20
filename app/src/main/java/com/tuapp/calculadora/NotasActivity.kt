@@ -22,54 +22,57 @@ class NotasActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notas)
 
-      // ... 
+        val layoutBloqueo = findViewById<LinearLayout>(R.id.layoutBloqueoNotas)
+        val layoutContenido = findViewById<LinearLayout>(R.id.layoutContenidoNotas)
+        val etPin = findViewById<EditText>(R.id.etPinNotas)
+        val btnEntrar = findViewById<Button>(R.id.btnEntrarNotas)
+        val btnNuevaNota = findViewById<FloatingActionButton>(R.id.btnNuevaNota)
 
-val prefs = getSharedPreferences("BovedaNotas", Context.MODE_PRIVATE)
-val pinGuardado = prefs.getString("pin_notas", null) // Busca si ya existe un PIN
+        rvNotas = findViewById(R.id.rvNotas)
+        rvNotas.layoutManager = LinearLayoutManager(this)
 
-// Ca
-if (pinGuardado == null) {
-    btnEntrar.text = "Crear PIN de Seguridad"
-    Toast.makeText(this, "Configura un PIN para tus notas", Toast.LENGTH_LONG).show()
-} else {
-    btnEntrar.text = "Desbloquear"
-}
+        // Lógica de Contraseña Personalizada
+        val prefs = getSharedPreferences("BovedaNotas", Context.MODE_PRIVATE)
+        val pinGuardado = prefs.getString("pin_notas", null)
 
-btnEntrar.setOnClickListener {
-    val pinIngresado = etPin.text.toString()
-
-    if (pinIngresado.isEmpty()) {
-        Toast.makeText(this, "Ingresa un PIN", Toast.LENGTH_SHORT).show()
-        return@setOnClickListener
-    }
-
-    if (pinGuardado == null) {
-        // -
-        prefs.edit().putString("pin_notas", pinIngresado).apply()
-        Toast.makeText(this, "PIN guardado correctamente", Toast.LENGTH_SHORT).show()
-        entrarANotas()
-    } else {
-        // --- P
-        if (pinIngresado == pinGuardado) {
-            entrarANotas()
+        if (pinGuardado == null) {
+            btnEntrar.text = "Crear PIN"
         } else {
-            Toast.makeText(this, "PIN Incorrecto", Toast.LENGTH_SHORT).show()
-            etPin.text.clear()
+            btnEntrar.text = "Desbloquear"
+        }
+
+        btnEntrar.setOnClickListener {
+            val pinIngresado = etPin.text.toString()
+
+            if (pinIngresado.isEmpty()) {
+                Toast.makeText(this, "Ingresa un PIN", Toast.LENGTH_SHORT).show()
+            } else {
+                if (pinGuardado == null) {
+                    // Crea el PIN por primera vez
+                    prefs.edit().putString("pin_notas", pinIngresado).apply()
+                    Toast.makeText(this, "PIN guardado", Toast.LENGTH_SHORT).show()
+                    entrarANotas(layoutBloqueo, layoutContenido, btnNuevaNota)
+                } else if (pinIngresado == pinGuardado) {
+                    // El PIN es correcto
+                    entrarANotas(layoutBloqueo, layoutContenido, btnNuevaNota)
+                } else {
+                    // El PIN es incorrecto
+                    Toast.makeText(this, "PIN Incorrecto", Toast.LENGTH_SHORT).show()
+                    etPin.text.clear()
+                }
+            }
+        }
+
+        btnNuevaNota.setOnClickListener {
+            mostrarEditor(null)
         }
     }
-}
 
-// ...
-private fun entrarANotas() {
-    val layoutBloqueo = findViewById<LinearLayout>(R.id.layoutBloqueoNotas)
-    val layoutContenido = findViewById<LinearLayout>(R.id.layoutContenidoNotas)
-    val btnNuevaNota = findViewById<FloatingActionButton>(R.id.btnNuevaNota)
-    
-    layoutBloqueo.visibility = View.GONE
-    layoutContenido.visibility = View.VISIBLE
-    btnNuevaNota.visibility = View.VISIBLE
-    cargarNotasDeDisco()
-}
+    private fun entrarANotas(bloqueo: View, contenido: View, btn: View) {
+        bloqueo.visibility = View.GONE
+        contenido.visibility = View.VISIBLE
+        btn.visibility = View.VISIBLE
+        cargarNotasDeDisco()
     }
 
     private fun cargarNotasDeDisco() {
