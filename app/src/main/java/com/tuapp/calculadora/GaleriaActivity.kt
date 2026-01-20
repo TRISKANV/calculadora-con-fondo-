@@ -16,7 +16,6 @@ import java.io.FileOutputStream
 
 class GaleriaActivity : AppCompatActivity() {
 
-    // 1. Asegúrate de que estas tres líneas estén aquí arriba
     private lateinit var rvGaleria: RecyclerView
     private lateinit var adapter: GaleriaAdapter
     private var listaFotos = mutableListOf<File>()
@@ -25,12 +24,12 @@ class GaleriaActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_galeria)
 
-        // 2. Aquí es donde se vincula con el XML
         rvGaleria = findViewById(R.id.rvGaleria)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddFoto)
 
         rvGaleria.layoutManager = GridLayoutManager(this, 3)
         
+        // Carga inicial
         cargarFotosDesdeBoveda()
 
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -52,19 +51,30 @@ class GaleriaActivity : AppCompatActivity() {
         val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
         if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
         
-        listaFotos = carpetaPrivada.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
+        // Obtenemos los archivos actualizados
+        val archivosEnCarpeta = carpetaPrivada.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
         
-        adapter = GaleriaAdapter(listaFotos, 
-            onFotoClick = { posicion ->
-                val intent = Intent(this, VisorActivity::class.java)
-                intent.putExtra("posicion", posicion)
-                startActivity(intent)
-            },
-            onFotoDelete = { posicion ->
-                borrarFotoDeBoveda(posicion)
-            }
-        )
-        rvGaleria.adapter = adapter
+        // Limpiamos y actualizamos nuestra lista global
+        listaFotos.clear()
+        listaFotos.addAll(archivosEnCarpeta)
+        
+        // Si el adaptador ya fue creado, avisamos que los datos cambiaron
+        if (::adapter.isInitialized) {
+            adapter.notifyDataSetChanged()
+        } else {
+            // Si es la primera vez, lo inicializamos
+            adapter = GaleriaAdapter(listaFotos, 
+                onFotoClick = { posicion ->
+                    val intent = Intent(this, VisorActivity::class.java)
+                    intent.putExtra("posicion", posicion)
+                    startActivity(intent)
+                },
+                onFotoDelete = { posicion ->
+                    borrarFotoDeBoveda(posicion)
+                }
+            )
+            rvGaleria.adapter = adapter
+        }
     }
 
     private fun importarFotoABoveda(uriOriginal: Uri) {
@@ -81,9 +91,13 @@ class GaleriaActivity : AppCompatActivity() {
                 }
             }
 
-            // Borrado de la galería pública
+            // --- ESTO ELIMINA EL ORIGINAL DE LA GALERÍA PÚBLICA ---
+            // Nota: En Android 11+ el sistema pedirá confirmación al usuario
             contentResolver.delete(uriOriginal, null, null)
-            Toast.makeText(this, "Foto protegida", Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(this, "Foto movida a la Bóveda", Toast.LENGTH_SHORT).show()
+            
+            // REFRESCAMOS AL INSTANTE
             cargarFotosDesdeBoveda()
             
         } catch (e: Exception) {
@@ -100,7 +114,7 @@ class GaleriaActivity : AppCompatActivity() {
                 listaFotos.removeAt(posicion)
                 adapter.notifyItemRemoved(posicion)
                 adapter.notifyItemRangeChanged(posicion, listaFotos.size)
-                Toast.makeText(this, "Eliminado correctamente", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Eliminado de la Bóveda", Toast.LENGTH_SHORT).show()
             }
         }
     }
