@@ -23,35 +23,30 @@ class BovedaActivity : AppCompatActivity() {
             drawerLayout.openDrawer(GravityCompat.END)
         }
 
-       navView.setNavigationItemSelectedListener { menuItem ->
-    when (menuItem.itemId) {
-        R.id.nav_fotos -> {
-            // ELIMINADO EL TOAST:
-            val intent = Intent(this, GaleriaActivity::class.java)
-            startActivity(intent)
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_fotos -> {
+                    startActivity(Intent(this, GaleriaActivity::class.java))
+                }
+                R.id.nav_videos -> {
+                    startActivity(Intent(this, VideoActivity::class.java))
+                }
+                R.id.nav_internet -> {
+                    startActivity(Intent(this, NavegadorActivity::class.java))
+                }
+                R.id.nav_notas -> {
+                    startActivity(Intent(this, NotasActivity::class.java))
+                }
+                R.id.nav_ajustes -> {
+                    Toast.makeText(this, "Ajustes de Seguridad", Toast.LENGTH_SHORT).show()
+                }
+            }
+            drawerLayout.closeDrawer(GravityCompat.END)
+            true
         }
-        R.id.nav_videos -> {
-            // ELIMINADO EL TOAST: 
-            val intent = Intent(this, VideoActivity::class.java)
-            startActivity(intent)
-        }
-        R.id.nav_internet -> {
-            val intent = Intent(this, NavegadorActivity::class.java)
-            startActivity(intent)
-        }
-        R.id.nav_notas -> {
-            // ESTO abrirá NotasActivity
-            val intent = Intent(this, NotasActivity::class.java)
-            startActivity(intent)
-        }
-        R.id.nav_ajustes -> {
-            Toast.makeText(this, "Ajustes de Seguridad", Toast.LENGTH_SHORT).show()
-        }
-    }
-    drawerLayout.closeDrawer(GravityCompat.END)
-    true
-}
+    } // 
 
+    // 
     override fun onBackPressed() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.END)) {
@@ -60,4 +55,4 @@ class BovedaActivity : AppCompatActivity() {
             super.onBackPressed()
         }
     }
-}
+} 
