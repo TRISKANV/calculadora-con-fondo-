@@ -61,4 +61,38 @@ class NotasActivity : AppCompatActivity() {
             .setNegativeButton("Cancelar", null)
             .show()
     }
+    
+  private fun mostrarEditor(notaExistente: Nota?) {
+    val builder = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+    val input = EditText(this)
+    input.setTextColor(android.graphics.Color.WHITE)
+    input.setPadding(50, 50, 50, 50)
+    input.setText(notaExistente?.contenido ?: "")
+    input.hint = "Escribe tu secreto aquí..."
+
+    builder.setTitle(if (notaExistente == null) "Nueva Nota" else "Editar Nota")
+    builder.setView(input)
+
+    builder.setPositiveButton("Guardar") { _, _ ->
+        val texto = input.text.toString()
+        if (texto.isNotEmpty()) {
+            if (notaExistente == null) {
+                listaNotas.add(Nota(contenido = texto, titulo = "")) 
+            } else {
+                notaExistente.contenido = texto
+            }
+            guardarEnDisco()
+        }
+    }
+
+    builder.setNegativeButton("Cancelar", null)
+    
+    if (notaExistente != null) {
+        builder.setNeutralButton("Eliminar") { _, _ ->
+            listaNotas.remove(notaExistente)
+            guardarEnDisco()
+        }
+    }
+
+    builder.show()
 }
