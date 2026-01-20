@@ -1,83 +1,76 @@
 package com.tuapp.calculadora
 
 import android.os.Bundle
-import android.view.inputmethod.EditorInfo
-import android.webkit.*
-import android.widget.*
+import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 
 class NavegadorActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private var motorSeleccionado = "https://www.google.com/search?q="
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navegador)
 
         webView = findViewById(R.id.webView)
+        progressBar = findViewById(R.id.pbCarga)
         val etUrl = findViewById<EditText>(R.id.etUrl)
         val btnIr = findViewById<ImageButton>(R.id.btnIr)
-        val spinnerMotor = findViewById<Spinner>(R.id.spinnerMotor)
-        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
-        // --- OPTIMIZACIÓN DE WEBVIEW ---
+        // Configuración moderna del WebView
         webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
-        webView.webViewClient = WebViewClient()
+        webView.settings.domStorageEnabled = true // Para que carguen páginas modernas como YouTube
+        webView.webViewClient = WebViewClient() // Para que los links abran dentro de la app
 
-        // --- MEJORA 1: LOGOS DINÁMICOS ---
-        val motores = arrayOf("Google", "DuckDuckGo", "StartPage", "Mojeek")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, motores)
-        spinnerMotor.adapter = adapter
-
-        spinnerMotor.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
-                when (motores[position]) {
-                    "DuckDuckGo" -> {
-                        motorSeleccionado = "https://duckduckgo.com/?q="
-                        // Aquí podrías cambiar el ícono si tuvieras los drawables
-                        // btnIr.setImageResource(R.drawable.logo_duck) 
-                    }
-                    "StartPage" -> motorSeleccionado = "https://www.startpage.com/do/search?query="
-                    "Mojeek" -> motorSeleccionado = "https://www.mojeek.com/search?q="
-                    else -> motorSeleccionado = "https://www.google.com/search?q="
+        // Lógica de la barra de carga
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                super.onProgressChanged(view, newProgress)
+                progressBar.progress = newProgress
+                if (newProgress < 100) {
+                    progressBar.visibility = View.VISIBLE
+                } else {
+                    progressBar.visibility = View.GONE
                 }
-                Toast.makeText(this@NavegadorActivity, "Motor: ${motores[position]}", Toast.LENGTH_SHORT).show()
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
-
-        // --- MEJORA 2: BOTÓN ENTER DEL TECLADO ---
-        etUrl.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
-                ejecutarBusqueda(etUrl.text.toString())
-                true
-            } else {
-                false
             }
         }
 
+        // Acción al presionar el botón de IR
         btnIr.setOnClickListener {
-            ejecutarBusqueda(etUrl.text.toString())
+            cargarUrl(etUrl.text.toString())
         }
+
+        // Acción al presionar "Enter" en el teclado
+        etUrl.setOnEditorActionListener { _, _, _ ->
+            cargarUrl(etUrl.text.toString())
+            true
+        }
+
+        // Página de inicio por defecto
+        webView.loadUrl("https://www.google.com")
     }
 
-    private fun ejecutarBusqueda(entrada: String) {
-        var url = entrada
-        if (url.isEmpty()) return
-        
-        if (url.startsWith("http://") || url.startsWith("https://")) {
-            webView.loadUrl(url)
-        } else if (url.contains(".") && !url.contains(" ")) {
-            webView.loadUrl("https://$url")
-        } else {
-            webView.loadUrl(motorSeleccionado + url)
+    private fun cargarUrl(url: String) {
+        var urlFinal = url
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            urlFinal = "https://www.google.com/search?q=$url"
         }
+        webView.loadUrl(urlFinal)
     }
 
+    // Para que al dar "atrás" no se salga de la app, sino que regrese a la página anterior
     override fun onBackPressed() {
-        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
+        if (webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            super.onBackPressed()
+        }
     }
 }
