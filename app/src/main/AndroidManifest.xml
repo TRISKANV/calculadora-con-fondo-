@@ -15,6 +15,7 @@
         android:theme="@style/Theme.AppCompat.NoActionBar">
         <activity android:name=".NavegadorActivity" android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".NotasActivity" android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity android:name=".GaleriaActivity" android:exported="false" />
         <activity android:name=".ReproductorActivity" />
         
         <activity
