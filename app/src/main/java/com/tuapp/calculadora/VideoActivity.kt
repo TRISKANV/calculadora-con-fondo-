@@ -22,17 +22,15 @@ class VideoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_video) // Asegúrate que este XML exista en layout
+        setContentView(R.layout.activity_video)
 
         rvVideos = findViewById(R.id.rvVideos)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddVideo)
 
-        // Configuramos la cuadrícula de videos (2 columnas)
         rvVideos.layoutManager = GridLayoutManager(this, 2)
         
         actualizarLista()
 
-        // Configuración para elegir video de la galería
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
@@ -55,9 +53,14 @@ class VideoActivity : AppCompatActivity() {
         
         adapter = VideoAdapter(listaVideos, 
             onVideoClick = { archivo ->
-                // AQUÍ SE CONECTA CON EL REPRODUCTOR
+                // Buscamos la posición del video que tocamos en la lista
+                val posicion = listaVideos.indexOf(archivo)
+                // Convertimos la lista de archivos a una lista de rutas (Strings)
+                val rutas = listaVideos.map { it.absolutePath }.toTypedArray()
+
                 val intent = Intent(this, ReproductorActivity::class.java)
-                intent.putExtra("videoPath", archivo.absolutePath)
+                intent.putExtra("lista_videos", rutas) // Enviamos toda la lista
+                intent.putExtra("posicion", posicion)  // Enviamos el índice actual
                 startActivity(intent)
             },
             onVideoDelete = { posicion ->
@@ -79,10 +82,10 @@ class VideoActivity : AppCompatActivity() {
                 }
             }
             
-            // Opcional: Intentar borrar el original si tienes permisos
-            // contentResolver.delete(uri, null, null)
+            // ELIMINAR EL ORIGINAL de la galería pública (Mover)
+            contentResolver.delete(uri, null, null)
 
-            Toast.makeText(this, "Video ocultado con éxito", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Video movido a la Bóveda", Toast.LENGTH_SHORT).show()
             actualizarLista()
         } catch (e: Exception) {
             Toast.makeText(this, "Error al guardar video", Toast.LENGTH_SHORT).show()
@@ -90,10 +93,12 @@ class VideoActivity : AppCompatActivity() {
     }
 
     private fun eliminarVideo(posicion: Int) {
+        if (posicion !in listaVideos.indices) return
         val archivo = listaVideos[posicion]
         if (archivo.delete()) {
             listaVideos.removeAt(posicion)
             adapter.notifyItemRemoved(posicion)
+            adapter.notifyItemRangeChanged(posicion, listaVideos.size)
             Toast.makeText(this, "Video eliminado", Toast.LENGTH_SHORT).show()
         }
     }
