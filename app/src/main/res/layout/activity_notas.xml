@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212">
@@ -10,7 +11,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="20dp"
+        android:visibility="visible">
 
         <TextView
             android:layout_width="wrap_content"
@@ -40,38 +42,34 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:visibility="gone"
-        android:padding="16dp">
+        android:visibility="gone">
 
-        <RelativeLayout
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="Mis Notas"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-            <ImageButton
-                android:id="@+id/btnEliminarNota"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_delete"
-                android:tint="#FF5252" />
-
-            <ImageButton
-                android:id="@+id/btnGuardarNota"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                android:layout_alignParentEnd="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_save"
-                android:tint="#008577" />
-        </RelativeLayout>
-
-        <EditText
-            android:id="@+id/etNotasPrivadas"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvNotas"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:gravity="top"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp" />
+            android:clipToPadding="false"
+            android:padding="8dp" />
     </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnNuevaNota"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:src="@android:drawable/ic_input_add"
+        android:visibility="gone"
+        app:backgroundTint="#00E676"
+        app:tint="#FFFFFF" />
+
 </FrameLayout>
