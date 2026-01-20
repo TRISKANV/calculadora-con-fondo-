@@ -19,7 +19,5 @@
         android:src="@android:drawable/ic_input_add"
         app:tint="#FFFFFF"
         app:backgroundTint="#FF4081"
-        app:fabSize="normal"
         android:contentDescription="Añadir Video" />
-
 </FrameLayout>
