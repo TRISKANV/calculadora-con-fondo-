@@ -6,11 +6,14 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class NotasAdapter(private val listaNotas: List<String>) : RecyclerView.Adapter<NotasAdapter.NotaViewHolder>() {
+class NotasAdapter(
+    private val notas: List<Nota>,
+    private val onClick: (Nota) -> Unit
+) : RecyclerView.Adapter<NotasAdapter.NotaViewHolder>() {
 
     class NotaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val contenido: TextView = view.findViewById(R.id.tvContenidoNota)
-        val fecha: TextView = view.findViewById(R.id.tvFechaNota)
+        val tvTitulo: TextView = view.findViewById(R.id.tvNotaTitulo)
+        val tvPreview: TextView = view.findViewById(R.id.tvNotaPreview)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotaViewHolder {
@@ -19,9 +22,11 @@ class NotasAdapter(private val listaNotas: List<String>) : RecyclerView.Adapter<
     }
 
     override fun onBindViewHolder(holder: NotaViewHolder, position: Int) {
-        holder.contenido.text = listaNotas[position]
-        holder.fecha.text = "Nota Encriptada" // Aquí podrías poner la fecha real luego
+        val nota = notas[position]
+        holder.tvTitulo.text = if (nota.titulo.isEmpty()) "Sin título" else nota.titulo
+        holder.tvPreview.text = nota.contenido
+        holder.itemView.setOnClickListener { onClick(nota) }
     }
 
-    override fun getItemCount() = listaNotas.size
+    override fun getItemCount() = notas.size
 }
