@@ -1,43 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#121212"
-    android:padding="16dp">
+    android:background="#121212">
 
-    <RelativeLayout
+    <LinearLayout
+        android:id="@+id/layoutBloqueoNotas"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp">
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="20dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Mis Notas Secretas"
+            android:text="Sección Encriptada"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textSize="22sp" />
 
-        <ImageButton
-            android:id="@+id/btnGuardarNota"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:layout_alignParentEnd="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_save"
-            android:tint="#008577" />
-    </RelativeLayout>
+        <EditText
+            android:id="@+id/etPinNotas"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:hint="PIN"
+            android:inputType="numberPassword"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#666666" />
 
-    <EditText
-        android:id="@+id/etNotasPrivadas"
+        <Button
+            android:id="@+id/btnEntrarNotas"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Desbloquear" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutContenidoNotas"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/transparent"
-        android:gravity="top"
-        android:hint="Escribe algo aquí..."
-        android:textColor="#FFFFFF"
-        android:textColorHint="#555555"
-        android:textSize="18sp" />
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:padding="16dp">
 
-</LinearLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageButton
+                android:id="@+id/btnEliminarNota"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_delete"
+                android:tint="#FF5252" />
+
+            <ImageButton
+                android:id="@+id/btnGuardarNota"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_alignParentEnd="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_save"
+                android:tint="#008577" />
+        </RelativeLayout>
+
+        <EditText
+            android:id="@+id/etNotasPrivadas"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:gravity="top"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+    </LinearLayout>
+</FrameLayout>
