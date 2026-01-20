@@ -22,11 +22,13 @@ class NotasActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notas)
 
+        // Referencias del diseño
         val layoutBloqueo = findViewById<LinearLayout>(R.id.layoutBloqueoNotas)
         val layoutContenido = findViewById<LinearLayout>(R.id.layoutContenidoNotas)
         val etPin = findViewById<EditText>(R.id.etPinNotas)
         val btnEntrar = findViewById<Button>(R.id.btnEntrarNotas)
         val btnNuevaNota = findViewById<FloatingActionButton>(R.id.btnNuevaNota)
+        val tvTitulo = findViewById<TextView>(R.id.tvTituloBloqueo)
 
         rvNotas = findViewById(R.id.rvNotas)
         rvNotas.layoutManager = LinearLayoutManager(this)
@@ -35,9 +37,12 @@ class NotasActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("BovedaNotas", Context.MODE_PRIVATE)
         val pinGuardado = prefs.getString("pin_notas", null)
 
+        // Ajustar textos según si ya existe un PIN
         if (pinGuardado == null) {
-            btnEntrar.text = "Crear PIN"
+            tvTitulo.text = "Configurar PIN"
+            btnEntrar.text = "Guardar y Entrar"
         } else {
+            tvTitulo.text = "Bóveda de Notas"
             btnEntrar.text = "Desbloquear"
         }
 
@@ -50,7 +55,8 @@ class NotasActivity : AppCompatActivity() {
                 if (pinGuardado == null) {
                     // Crea el PIN por primera vez
                     prefs.edit().putString("pin_notas", pinIngresado).apply()
-                    Toast.makeText(this, "PIN guardado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "PIN configurado", Toast.LENGTH_SHORT).show()
+                    // Recargar la actividad para que pinGuardado ya no sea null o simplemente entrar
                     entrarANotas(layoutBloqueo, layoutContenido, btnNuevaNota)
                 } else if (pinIngresado == pinGuardado) {
                     // El PIN es correcto
@@ -92,11 +98,13 @@ class NotasActivity : AppCompatActivity() {
     }
 
     private fun mostrarEditor(notaExistente: Nota?) {
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
         val input = EditText(this)
         input.setText(notaExistente?.contenido ?: "")
+        input.setTextColor(android.graphics.Color.WHITE)
         input.hint = "Escribe tu nota aquí..."
-        input.setPadding(50, 40, 50, 40)
+        input.setHintTextColor(android.graphics.Color.GRAY)
+        input.setPadding(60, 40, 60, 40)
 
         builder.setTitle(if (notaExistente == null) "Nueva Nota" else "Editar Nota")
         builder.setView(input)
