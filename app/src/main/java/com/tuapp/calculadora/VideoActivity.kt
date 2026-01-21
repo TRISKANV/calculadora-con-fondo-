@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -31,16 +30,31 @@ class VideoActivity : AppCompatActivity() {
         
         actualizarLista()
 
+        // Registro del selector moderno para Videos
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let { uri ->
-                    guardarVideoEnBoveda(uri)
+                val uri = result.data?.data
+                if (uri != null) {
+                    try {
+                        // Solicitar permiso de larga duración para el archivo de video
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                        guardarVideoEnBoveda(uri)
+                    } catch (e: Exception) {
+                        guardarVideoEnBoveda(uri)
+                    }
                 }
             }
         }
 
         fabAdd.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+            // Usamos OPEN_DOCUMENT para tener permisos totales sobre el archivo elegido
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "video/*"
+            }
             launcher.launch(intent)
         }
     }
@@ -51,16 +65,15 @@ class VideoActivity : AppCompatActivity() {
         
         listaVideos = carpeta.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
         
+        // Convertimos la lista de archivos a rutas para el Reproductor
+        val rutas = listaVideos.map { it.absolutePath }.toTypedArray()
+
         adapter = VideoAdapter(listaVideos, 
             onVideoClick = { archivo ->
-                // Buscamos la posición del video que tocamos en la lista
                 val posicion = listaVideos.indexOf(archivo)
-                // Convertimos la lista de archivos a una lista de rutas (Strings)
-                val rutas = listaVideos.map { it.absolutePath }.toTypedArray()
-
                 val intent = Intent(this, ReproductorActivity::class.java)
-                intent.putExtra("lista_videos", rutas) // Enviamos toda la lista
-                intent.putExtra("posicion", posicion)  // Enviamos el índice actual
+                intent.putExtra("lista_videos", rutas)
+                intent.putExtra("posicion", posicion)
                 startActivity(intent)
             },
             onVideoDelete = { posicion ->
@@ -72,23 +85,32 @@ class VideoActivity : AppCompatActivity() {
 
     private fun guardarVideoEnBoveda(uri: Uri) {
         try {
-            val inputStream = contentResolver.openInputStream(uri)
             val carpeta = File(getExternalFilesDir(null), "VideosSecretos")
-            val archivoDestino = File(carpeta, "VIDEO_${System.currentTimeMillis()}.mp4")
+            if (!carpeta.exists()) carpeta.mkdirs()
+            
+            val nombreArchivo = "VIDEO_SEC_${System.currentTimeMillis()}.mp4"
+            val archivoDestino = File(carpeta, nombreArchivo)
 
-            inputStream?.use { input ->
-                FileOutputStream(archivoDestino).use { output ->
-                    input.copyTo(output)
+            // COPIAR EL VIDEO
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                FileOutputStream(archivoDestino).use { outputStream ->
+                    inputStream.copyTo(outputStream)
                 }
             }
             
-            // ELIMINAR EL ORIGINAL de la galería pública (Mover)
-            contentResolver.delete(uri, null, null)
+            // BORRAR EL ORIGINAL (Mover)
+            // En Android 11+ el sistema pedirá confirmación al usuario para borrar
+            try {
+                contentResolver.delete(uri, null, null)
+            } catch (e: Exception) {
+                // Si falla el borrado automático, se maneja silenciosamente o se avisa
+            }
 
-            Toast.makeText(this, "Video movido a la Bóveda", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Video ocultado con éxito", Toast.LENGTH_SHORT).show()
             actualizarLista()
         } catch (e: Exception) {
-            Toast.makeText(this, "Error al guardar video", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+            Toast.makeText(this, "Error: No se pudo mover el video", Toast.LENGTH_LONG).show()
         }
     }
 
