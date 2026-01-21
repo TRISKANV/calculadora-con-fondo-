@@ -33,7 +33,12 @@
             android:name=".NotasActivity" 
             android:exported="false" 
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />
-            
+            android:windowSoftInputMode="adjustResize" />  
+        
+    <activity 
+            android:name=".DescargasActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+        
     </application>
 </manifest>
