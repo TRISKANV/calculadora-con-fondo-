@@ -1,81 +1,99 @@
 package com.tuapp.calculadora
 
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
+import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
-import java.text.DecimalFormat
 
-class DescargasAdapter(
-    private val archivos: MutableList<File>,
-    private val onClick: (File) -> Unit,
-    private val onLongClick: (Int) -> Unit // Para poder eliminar archivos después
-) : RecyclerView.Adapter<DescargasAdapter.ViewHolder>() {
+class DescargasActivity : AppCompatActivity() {
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val nombre: TextView = view.findViewById(R.id.tvNombreArchivo)
-        val detalle: TextView = view.findViewById(R.id.tvDetalleArchivo)
-        val icono: ImageView = view.findViewById(R.id.ivIconoArchivo)
+    private lateinit var rvDescargas: RecyclerView
+    private lateinit var adapter: DescargasAdapter
+    private var listaArchivos = mutableListOf<File>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_descargas)
+
+        // Inicializar la vista
+        rvDescargas = findViewById(R.id.rvDescargas)
+        rvDescargas.layoutManager = LinearLayoutManager(this)
+
+        // Cargar los archivos guardados
+        obtenerDescargasSecretas()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_descarga, parent, false)
-        return ViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val archivo = archivos[position]
+    private fun obtenerDescargasSecretas() {
+        val carpeta = File(getExternalFilesDir(null), "DescargasSecretas")
         
-        // Mostrar nombre del archivo
-        holder.nombre.text = archivo.name
-        
-        // Mostrar tamaño del archivo formateado
-        holder.detalle.text = formatearTamaño(archivo.length())
+        // 1. Toque final de seguridad: Crear carpeta y archivo .nomedia
+        if (!carpeta.exists()) carpeta.mkdirs()
+        val noMedia = File(carpeta, ".nomedia")
+        if (!noMedia.exists()) noMedia.createNewFile()
 
-        // Asignar icono según la extensión del archivo
-        val extension = archivo.extension.lowercase()
-        when (extension) {
-            "jpg", "jpeg", "png", "webp", "gif" -> {
-                holder.icono.setImageResource(android.R.drawable.ic_menu_gallery)
-            }
-            "apk" -> {
-                holder.icono.setImageResource(android.R.drawable.sym_def_app_icon)
-            }
-            "pdf" -> {
-                holder.icono.setImageResource(android.R.drawable.ic_menu_edit)
-            }
-            "mp4", "mkv", "avi" -> {
-                holder.icono.setImageResource(android.R.drawable.ic_media_play)
-            }
-            "zip", "rar" -> {
-                holder.icono.setImageResource(android.R.drawable.ic_menu_save)
-            }
-            else -> {
-                holder.icono.setImageResource(android.R.drawable.ic_input_get)
-            }
-        }
-
-        // Eventos de click
-        holder.itemView.setOnClickListener { onClick(archivo) }
+        // 2. Filtrar solo archivos reales (ignorando el .nomedia)
+        val archivos = carpeta.listFiles()?.filter { it.isFile && it.name != ".nomedia" }
         
-        // Click largo para eliminar
-        holder.itemView.setOnLongClickListener {
-            onLongClick(position)
-            true
+        if (archivos != null) {
+            listaArchivos.clear()
+            listaArchivos.addAll(archivos)
+            
+            // Configurar el adaptador con las funciones de Click y Click Largo (Borrar)
+            adapter = DescargasAdapter(
+                listaArchivos, 
+                onClick = { archivo ->
+                    abrirArchivo(archivo)
+                },
+                onLongClick = { posicion ->
+                    confirmarEliminacion(posicion)
+                }
+            )
+            rvDescargas.adapter = adapter
         }
     }
 
-    override fun getItemCount() = archivos.size
+    private fun confirmarEliminacion(posicion: Int) {
+        val archivo = listaArchivos[posicion]
+        
+        // Creamos un diálogo elegante para confirmar el borrado
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("¿Eliminar archivo?")
+        builder.setMessage("Se borrará permanentemente de la bóveda: \n\n${archivo.name}")
+        
+        builder.setPositiveButton("Eliminar") { _, _ ->
+            try {
+                if (archivo.delete()) {
+                    listaArchivos.removeAt(posicion)
+                    adapter.notifyItemRemoved(posicion)
+                    // Notificar cambios en el rango para evitar errores de índice
+                    adapter.notifyItemRangeChanged(posicion, listaArchivos.size)
+                    Toast.makeText(this, "Archivo eliminado", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "No se pudo eliminar el archivo", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this, "Error al borrar: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        builder.setNegativeButton("Cancelar", null)
+        
+        val dialog = builder.create()
+        dialog.show()
+    }
 
-    // Función útil para mostrar el tamaño (KB, MB, etc) de forma elegante
-    private fun formatearTamaño(size: Long): String {
-        if (size <= 0) return "0 B"
-        val unidades = arrayOf("B", "KB", "MB", "GB", "TB")
-        val digitoGrupo = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
-        return DecimalFormat("#,##0.#").format(size / Math.pow(1024.0, digitoGrupo.toDouble())) + " " + unidades[digitoGrupo]
+    private fun abrirArchivo(archivo: File) {
+        // Por ahora solo avisamos que se intenta abrir. 
+        // Aquí podrías agregar un Intent para ver imágenes o PDFs.
+        Toast.makeText(this, "Abriendo: ${archivo.name}", Toast.LENGTH_SHORT).show()
+    }
+    
+    // Si regresas a esta pantalla, refrescamos la lista por si hubo cambios
+    override fun onResume() {
+        super.onResume()
+        obtenerDescargasSecretas()
     }
 }
