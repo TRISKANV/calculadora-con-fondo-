@@ -27,6 +27,7 @@
         <activity android:name=".VideoActivity" android:exported="false" />
         <activity android:name=".VisorActivity" android:exported="false" />
         <activity android:name=".ReproductorActivity" />
+        <activity android:name=".DescargasActivity" />
         
         <activity 
             android:name=".NotasActivity" 
