@@ -35,7 +35,7 @@
             android:name=".AliasClima"
             android:enabled="false"
             android:exported="true"
-            android:icon="@drawable/ic_clima"
+            android:icon="@drawable/ic_calculadora_1"
             android:label="Clima"
             android:targetActivity=".MainActivity">
             <intent-filter>
@@ -48,7 +48,7 @@
             android:name=".AliasClassic"
             android:enabled="false"
             android:exported="true"
-            android:icon="@drawable/ic_calc_normal"
+            android:icon="@drawable/ic_calculadora_2"
             android:label="Calculadora"
             android:targetActivity=".MainActivity">
             <intent-filter>
