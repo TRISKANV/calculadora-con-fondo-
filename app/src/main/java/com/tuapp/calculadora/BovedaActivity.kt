@@ -42,9 +42,11 @@ class BovedaActivity : AppCompatActivity() {
                     startActivity(Intent(this, DescargasActivity::class.java))
                 }
                 // ---------------------------------
-                R.id.nav_ajustes -> {
-                    Toast.makeText(this, "Ajustes de Seguridad", Toast.LENGTH_SHORT).show()
-                }
+                // Busca este bloque dentro de BovedaActivity.kt
+R.id.nav_ajustes -> {
+    val intent = Intent(this, AjustesActivity::class.java)
+    startActivity(intent)
+}
             }
             drawerLayout.closeDrawer(GravityCompat.END)
             true
