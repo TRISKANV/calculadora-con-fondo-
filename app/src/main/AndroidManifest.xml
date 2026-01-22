@@ -9,36 +9,37 @@
     
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:roundIcon="@drawable/ic_launcher"
-        android:label="Calculadora"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="Calculadora Científica"
         android:theme="@style/Theme.AppCompat.NoActionBar">
 
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity 
+            android:name=".MainActivity" 
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".BovedaActivity" android:theme="@style/Theme.AppCompat.NoActionBar" android:exported="false" />
+        <activity android:name=".BovedaActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".NavegadorActivity" android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".GaleriaActivity" android:exported="false" />
         <activity android:name=".VideoActivity" android:exported="false" />
         <activity android:name=".VisorActivity" android:exported="false" />
         <activity android:name=".ReproductorActivity" />
-        <activity android:name=".DescargasActivity" />
+        
+        <activity 
+            android:name=".DescargasActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         
         <activity 
             android:name=".NotasActivity" 
             android:exported="false" 
             android:theme="@style/Theme.AppCompat.NoActionBar"
             android:windowSoftInputMode="adjustResize" />  
-        
-    <activity 
-            android:name=".DescargasActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
         
     </application>
 </manifest>
