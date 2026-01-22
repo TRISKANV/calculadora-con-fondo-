@@ -6,22 +6,56 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:roundIcon="@drawable/ic_launcher"
-        android:label="Calculadora Científica"
+        android:label="Calculadora"
         android:theme="@style/Theme.AppCompat.NoActionBar">
 
-        <activity 
-            android:name=".MainActivity" 
-            android:exported="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <activity-alias
+            android:name=".AliasCranio"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher"
+            android:label="Calculadora"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".AliasClima"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_clima"
+            android:label="Clima"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".AliasClassic"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_calc_normal"
+            android:label="Calculadora"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <activity android:name=".BovedaActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".NavegadorActivity" android:theme="@style/Theme.AppCompat.NoActionBar" />
@@ -29,17 +63,13 @@
         <activity android:name=".VideoActivity" android:exported="false" />
         <activity android:name=".VisorActivity" android:exported="false" />
         <activity android:name=".ReproductorActivity" />
+        <activity android:name=".DescargasActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
         
-        <activity 
-            android:name=".DescargasActivity"
+        <activity
+            android:name=".NotasActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
-        
-        <activity 
-            android:name=".NotasActivity" 
-            android:exported="false" 
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />  
-        
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 </manifest>
