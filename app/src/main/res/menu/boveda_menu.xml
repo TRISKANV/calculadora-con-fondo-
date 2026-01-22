@@ -1,14 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <group android:checkableBehavior="single">
-        <item android:id="@+id/nav_fotos" android:title="Fotos" android:icon="@android:drawable/ic_menu_camera" />
-        <item android:id="@+id/nav_videos" android:title="Videos" android:icon="@android:drawable/ic_menu_slideshow" />
-        <item android:id="@+id/nav_internet" android:title="Internet" android:icon="@android:drawable/ic_menu_search" />
-        <item android:id="@+id/nav_notas" android:title="Notas" android:icon="@android:drawable/ic_menu_edit" />
+        <item
+            android:id="@+id/nav_fotos"
+            android:icon="@android:drawable/ic_menu_gallery"
+            android:title="Fotos" />
+
+        <item
+            android:id="@+id/nav_videos"
+            android:icon="@android:drawable/ic_menu_slideshow"
+            android:title="Videos" />
+
+        <item
+            android:id="@+id/nav_internet"
+            android:icon="@android:drawable/ic_menu_search"
+            android:title="Navegador" />
+
+        <item
+            android:id="@+id/nav_notas"
+            android:icon="@android:drawable/ic_menu_edit"
+            android:title="Notas" />
+
+        <item
+            android:id="@+id/nav_descargas"
+            android:icon="@android:drawable/stat_sys_download_done"
+            android:title="Descargas" />
     </group>
-    <item android:title="Otros">
+
+    <item android:title="Opciones">
         <menu>
-            <item android:id="@+id/nav_ajustes" android:title="Ajustes" android:icon="@android:drawable/ic_menu_preferences" />
+            <item
+                android:id="@+id/nav_ajustes"
+                android:icon="@android:drawable/ic_menu_preferences"
+                android:title="Ajustes" />
         </menu>
     </item>
+
 </menu>
