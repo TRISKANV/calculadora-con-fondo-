@@ -37,6 +37,11 @@ class BovedaActivity : AppCompatActivity() {
                 R.id.nav_notas -> {
                     startActivity(Intent(this, NotasActivity::class.java))
                 }
+                // --- NUEVA OPCIÓN DE DESCARGAS ---
+                R.id.nav_descargas -> {
+                    startActivity(Intent(this, DescargasActivity::class.java))
+                }
+                // ---------------------------------
                 R.id.nav_ajustes -> {
                     Toast.makeText(this, "Ajustes de Seguridad", Toast.LENGTH_SHORT).show()
                 }
@@ -44,9 +49,8 @@ class BovedaActivity : AppCompatActivity() {
             drawerLayout.closeDrawer(GravityCompat.END)
             true
         }
-    } // 
+    }
 
-    // 
     override fun onBackPressed() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.END)) {
@@ -55,4 +59,4 @@ class BovedaActivity : AppCompatActivity() {
             super.onBackPressed()
         }
     }
-} 
+}
