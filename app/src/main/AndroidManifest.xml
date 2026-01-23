@@ -6,12 +6,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:roundIcon="@drawable/ic_launcher"
-        android:label="Calculadora"
+        android:icon="@drawable/ic_calculadora_2"
+        android:roundIcon="@drawable/ic_calculadora_2"
+        android:label="Calculadora Cientifica"
         android:theme="@style/Theme.AppCompat.NoActionBar">
 
         <activity
@@ -22,8 +23,8 @@
             android:name=".AliasCranio"
             android:enabled="true"
             android:exported="true"
-            android:icon="@drawable/ic_launcher"
-            android:label="Calculadora"
+            android:icon="@drawable/ic_calculadora_2"
+            android:label="Calculadora Cientifica"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,8 +36,8 @@
             android:name=".AliasClima"
             android:enabled="false"
             android:exported="true"
-            android:icon="@drawable/ic_calculadora_1"
-            android:label="Clima"
+            android:icon="@drawable/ic_calculadora_3"
+            android:label="Calculadora Cientifica"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,7 +50,7 @@
             android:enabled="false"
             android:exported="true"
             android:icon="@drawable/ic_calculadora_2"
-            android:label="Calculadora"
+            android:label="Calculadora Cientifica"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
