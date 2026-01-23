@@ -1,15 +1,21 @@
 package com.tuapp.calculadora
 
+import android.app.DownloadManager
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.URLUtil
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
 
 // Clase para definir cada motor de búsqueda
 data class MotorBusqueda(val nombre: String, val url: String, val icono: Int)
@@ -24,6 +30,7 @@ class NavegadorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navegador)
 
+        // Inicializar vistas
         webView = findViewById(R.id.webView)
         progressBar = findViewById(R.id.pbCarga)
         val etUrl = findViewById<EditText>(R.id.etUrl)
@@ -38,11 +45,10 @@ class NavegadorActivity : AppCompatActivity() {
             MotorBusqueda("Searx", "https://searx.be/search?q=", android.R.drawable.ic_menu_manage)
         )
 
-        // 2. Configurar el Adaptador Personalizado para el Spinner
+        // 2. Adaptador para el Spinner (Menú de motores)
         val adapter = MotorAdapter(this, listaMotores)
         spinnerMotores.adapter = adapter
 
-        // 3. Detectar qué motor selecciona el usuario
         spinnerMotores.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 motorActualUrl = listaMotores[position].url
@@ -50,10 +56,18 @@ class NavegadorActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // Configuración del WebView
+        // 3. Configuración del WebView
         webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true 
-        webView.webViewClient = WebViewClient() 
+        webView.settings.domStorageEnabled = true
+        webView.webViewClient = WebViewClient()
+
+        // Habilitar menú contextual para descargar imágenes/videos
+        registerForContextMenu(webView)
+
+        // Escuchador de descargas (para APKs, ZIPs, etc.)
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
+            gestionarDescarga(url, userAgent, contentDisposition, mimetype)
+        }
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -63,30 +77,76 @@ class NavegadorActivity : AppCompatActivity() {
             }
         }
 
+        // Acciones de búsqueda
         btnIr.setOnClickListener { cargarUrl(etUrl.text.toString()) }
-
         etUrl.setOnEditorActionListener { _, _, _ ->
             cargarUrl(etUrl.text.toString())
             true
         }
 
+        // Página de inicio
         webView.loadUrl("https://www.google.com")
     }
 
     private fun cargarUrl(url: String) {
         val urlFinal = if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            motorActualUrl + url // Usa el motor seleccionado si no es una URL directa
+            motorActualUrl + url
         } else {
             url
         }
         webView.loadUrl(urlFinal)
     }
 
+    // 4. Gestión de descargas al sistema
+    private fun gestionarDescarga(url: String, userAgent: String, contentDisposition: String?, mimetype: String?) {
+        try {
+            val request = DownloadManager.Request(Uri.parse(url))
+            val fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
+
+            request.setMimeType(mimetype)
+            val cookies = android.webkit.CookieManager.getInstance().getCookie(url)
+            request.addRequestHeader("cookie", cookies)
+            request.addRequestHeader("User-Agent", userAgent)
+
+            request.setTitle(fileName)
+            request.setDescription("Descargando desde Navegador Secreto")
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+
+            val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            dm.enqueue(request)
+
+            Toast.makeText(this, "Iniciando descarga: $fileName", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error al descargar: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // 5. Menú para "Descargar imagen/video" al mantener presionado
+    override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+        val result = webView.hitTestResult
+
+        if (result.type == WebView.HitTestResult.IMAGE_TYPE || 
+            result.type == WebView.HitTestResult.SRC_IMAGE_URI_TYPE ||
+            result.type == WebView.HitTestResult.VIDEO_TYPE) {
+            
+            menu.setHeaderTitle("Acción de Archivo")
+            menu.add(0, 1, 0, "Guardar en Descargas").setOnMenuItemClickListener {
+                val url = result.extra
+                if (url != null) {
+                    gestionarDescarga(url, webView.settings.userAgentString, null, null)
+                }
+                true
+            }
+        }
+    }
+
     override fun onBackPressed() {
         if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 
-    // --- ADAPTADOR INTERNO PARA EL MENÚ DE MOTORES ---
+    // ADAPTADOR DEL MENÚ
     inner class MotorAdapter(context: Context, private val motores: List<MotorBusqueda>) :
         ArrayAdapter<MotorBusqueda>(context, 0, motores) {
 
@@ -101,10 +161,8 @@ class NavegadorActivity : AppCompatActivity() {
         private fun crearFila(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_motor_busqueda, parent, false)
             val motor = getItem(position)
-
             val icono = view.findViewById<ImageView>(R.id.ivMotorIcono)
             val nombre = view.findViewById<TextView>(R.id.tvMotorNombre)
-
             motor?.let {
                 icono.setImageResource(it.icono)
                 nombre.text = it.nombre
