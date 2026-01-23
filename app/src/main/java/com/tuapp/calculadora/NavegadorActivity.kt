@@ -15,7 +15,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import java.io.File
 
 // Clase para definir cada motor de búsqueda
 data class MotorBusqueda(val nombre: String, val url: String, val icono: Int)
@@ -84,7 +83,7 @@ class NavegadorActivity : AppCompatActivity() {
             true
         }
 
-        // Página de inicio
+        // Página de inicio por defecto
         webView.loadUrl("https://www.google.com")
     }
 
@@ -122,15 +121,14 @@ class NavegadorActivity : AppCompatActivity() {
         }
     }
 
-    // 5. Menú para "Descargar imagen/video" al mantener presionado
+    // 5. Menú para descargar al mantener presionado (Corregido para evitar errores de compilación)
     override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
         super.onCreateContextMenu(menu, v, menuInfo)
         val result = webView.hitTestResult
+        val tipo = result.type
 
-        if (result.type == WebView.HitTestResult.IMAGE_TYPE || 
-            result.type == WebView.HitTestResult.SRC_IMAGE_URI_TYPE ||
-            result.type == WebView.HitTestResult.VIDEO_TYPE) {
-            
+        // 5 = IMAGE_TYPE, 8 = SRC_IMAGE_URI_TYPE, 9 = SRC_VIDEO_TYPE
+        if (tipo == 5 || tipo == 8 || tipo == 9) {
             menu.setHeaderTitle("Acción de Archivo")
             menu.add(0, 1, 0, "Guardar en Descargas").setOnMenuItemClickListener {
                 val url = result.extra
@@ -146,7 +144,7 @@ class NavegadorActivity : AppCompatActivity() {
         if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 
-    // ADAPTADOR DEL MENÚ
+    // Adaptador del Menú desplegable
     inner class MotorAdapter(context: Context, private val motores: List<MotorBusqueda>) :
         ArrayAdapter<MotorBusqueda>(context, 0, motores) {
 
