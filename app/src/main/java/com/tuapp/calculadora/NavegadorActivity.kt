@@ -9,10 +9,12 @@ import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.URLUtil
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.CookieManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 
@@ -27,6 +29,13 @@ class NavegadorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // --- SEGURIDAD 1: BLOQUEO DE CAPTURAS Y MULTITAREA ---
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         setContentView(R.layout.activity_navegador)
 
         // Inicializar vistas
@@ -44,7 +53,7 @@ class NavegadorActivity : AppCompatActivity() {
             MotorBusqueda("Searx", "https://searx.be/search?q=", android.R.drawable.ic_menu_manage)
         )
 
-        // 2. Adaptador para el Spinner (Menú de motores)
+        // 2. Adaptador para el Spinner
         val adapter = MotorAdapter(this, listaMotores)
         spinnerMotores.adapter = adapter
 
@@ -55,15 +64,14 @@ class NavegadorActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // 3. Configuración del WebView
+        // 3. Configuración del WebView (Modo Incógnito Forzado)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+        webView.settings.databaseEnabled = false // No guardar bases de datos locales
         webView.webViewClient = WebViewClient()
 
-        // Habilitar menú contextual para descargar imágenes/videos
         registerForContextMenu(webView)
 
-        // Escuchador de descargas (para APKs, ZIPs, etc.)
         webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
             gestionarDescarga(url, userAgent, contentDisposition, mimetype)
         }
@@ -76,14 +84,12 @@ class NavegadorActivity : AppCompatActivity() {
             }
         }
 
-        // Acciones de búsqueda
         btnIr.setOnClickListener { cargarUrl(etUrl.text.toString()) }
         etUrl.setOnEditorActionListener { _, _, _ ->
             cargarUrl(etUrl.text.toString())
             true
         }
 
-        // Página de inicio por defecto
         webView.loadUrl("https://www.google.com")
     }
 
@@ -96,14 +102,13 @@ class NavegadorActivity : AppCompatActivity() {
         webView.loadUrl(urlFinal)
     }
 
-    // 4. Gestión de descargas al sistema
     private fun gestionarDescarga(url: String, userAgent: String, contentDisposition: String?, mimetype: String?) {
         try {
             val request = DownloadManager.Request(Uri.parse(url))
             val fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
 
             request.setMimeType(mimetype)
-            val cookies = android.webkit.CookieManager.getInstance().getCookie(url)
+            val cookies = CookieManager.getInstance().getCookie(url)
             request.addRequestHeader("cookie", cookies)
             request.addRequestHeader("User-Agent", userAgent)
 
@@ -121,13 +126,11 @@ class NavegadorActivity : AppCompatActivity() {
         }
     }
 
-    // 5. Menú para descargar al mantener presionado (Corregido para evitar errores de compilación)
     override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
         super.onCreateContextMenu(menu, v, menuInfo)
         val result = webView.hitTestResult
         val tipo = result.type
 
-        // 5 = IMAGE_TYPE, 8 = SRC_IMAGE_URI_TYPE, 9 = SRC_VIDEO_TYPE
         if (tipo == 5 || tipo == 8 || tipo == 9) {
             menu.setHeaderTitle("Acción de Archivo")
             menu.add(0, 1, 0, "Guardar en Descargas").setOnMenuItemClickListener {
@@ -140,11 +143,30 @@ class NavegadorActivity : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
+    // --- SEGURIDAD 2: AUTO-CIERRE AL SALIR ---
+    override fun onStop() {
+        super.onStop()
+        finish() // Si sales del navegador, se cierra la sesión
     }
 
-    // Adaptador del Menú desplegable
+    // --- SEGURIDAD 3: LIMPIEZA TOTAL AL CERRAR ---
+    override fun onDestroy() {
+        webView.clearCache(true)
+        webView.clearHistory()
+        webView.clearFormData()
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().flush()
+        super.onDestroy()
+    }
+
+    override fun onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            finish() // Cerramos la actividad para activar el auto-cierre
+        }
+    }
+
     inner class MotorAdapter(context: Context, private val motores: List<MotorBusqueda>) :
         ArrayAdapter<MotorBusqueda>(context, 0, motores) {
 
