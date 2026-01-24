@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +22,13 @@ class GaleriaActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         setContentView(R.layout.activity_galeria)
 
         rvGaleria = findViewById(R.id.rvGaleria)
@@ -30,20 +38,18 @@ class GaleriaActivity : AppCompatActivity() {
         
         cargarFotosDesdeBoveda()
 
-        // Registro del selector de archivos moderno
+        // 
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 if (uri != null) {
                     try {
-                        // Solicitamos permiso persistente para que Android no nos corte el acceso
                         contentResolver.takePersistableUriPermission(
                             uri,
                             Intent.FLAG_GRANT_READ_URI_PERMISSION
                         )
                         importarFotoABoveda(uri)
                     } catch (e: Exception) {
-                        // Si el selector no soporta persistencia, intentamos importar igual
                         importarFotoABoveda(uri)
                     }
                 }
@@ -51,7 +57,6 @@ class GaleriaActivity : AppCompatActivity() {
         }
 
         fabAdd.setOnClickListener {
-            // Usamos ACTION_OPEN_DOCUMENT en lugar de ACTION_PICK para evitar errores de seguridad
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "image/*"
@@ -93,20 +98,16 @@ class GaleriaActivity : AppCompatActivity() {
             if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
             val archivoDestino = File(carpetaPrivada, nombreArchivo)
 
-            // PROCESO DE COPIADO
             contentResolver.openInputStream(uriOriginal)?.use { inputStream ->
                 FileOutputStream(archivoDestino).use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
             }
 
-            // PROCESO DE BORRADO DEL ORIGINAL
-            // En Android 11+ aparecerá un cuadro de diálogo pidiendo permiso para borrar
             try {
                 contentResolver.delete(uriOriginal, null, null)
             } catch (e: Exception) {
-                // Si falla por seguridad, el usuario deberá borrarla manualmente o
-                // el sistema lanzará automáticamente la solicitud de borrado.
+                //
             }
 
             Toast.makeText(this, "Foto protegida con éxito", Toast.LENGTH_SHORT).show()
@@ -114,7 +115,7 @@ class GaleriaActivity : AppCompatActivity() {
             
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error de acceso: No se pudo guardar la imagen", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error de acceso", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -130,5 +131,16 @@ class GaleriaActivity : AppCompatActivity() {
                 Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    // --- 
+    override fun onStop() {
+        super.onStop()
+        finish() 
+    }
+
+    override fun onBackPressed() {
+        // 
+        finish()
     }
 }
