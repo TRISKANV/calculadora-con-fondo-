@@ -1,6 +1,7 @@
 package com.tuapp.calculadora
 
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
@@ -10,6 +11,14 @@ class VisorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 
+        // 
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         setContentView(R.layout.activity_visor_fotos)
 
         val viewPager = findViewById<ViewPager2>(R.id.viewPagerFotos)
@@ -30,5 +39,16 @@ class VisorActivity : AppCompatActivity() {
         viewPager.setCurrentItem(posicionInicial, false)
 
         btnCerrar.setOnClickListener { finish() }
+    }
+
+    
+    override fun onStop() {
+        super.onStop()
+        finish()
+    }
+
+    override fun onBackPressed() {
+        // 
+        finish()
     }
 }
