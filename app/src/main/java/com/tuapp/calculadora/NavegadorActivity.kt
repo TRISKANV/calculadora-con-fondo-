@@ -17,6 +17,7 @@ import android.webkit.WebViewClient
 import android.webkit.CookieManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
 
 // Clase para definir cada motor de búsqueda
 data class MotorBusqueda(val nombre: String, val url: String, val icono: Int)
@@ -67,7 +68,7 @@ class NavegadorActivity : AppCompatActivity() {
         // 3. Configuración del WebView (Modo Incógnito Forzado)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
-        webView.settings.databaseEnabled = false // No guardar bases de datos locales
+        webView.settings.databaseEnabled = false 
         webView.webViewClient = WebViewClient()
 
         registerForContextMenu(webView)
@@ -113,14 +114,18 @@ class NavegadorActivity : AppCompatActivity() {
             request.addRequestHeader("User-Agent", userAgent)
 
             request.setTitle(fileName)
-            request.setDescription("Descargando desde Navegador Secreto")
+            request.setDescription("Protegiendo archivo en la boveda...")
+            
+            // --- CAMBIO CLAVE: DESCARGA PRIVADA ---
+            // Los archivos se guardan en Android/data/com.tuapp.calculadora/files/Download
+            // Estos archivos NO aparecen en la Galería ni en el Administrador de Archivos común.
+            request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
 
             val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
 
-            Toast.makeText(this, "Iniciando descarga: $fileName", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Descarga segura iniciada...", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error al descargar: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -133,7 +138,7 @@ class NavegadorActivity : AppCompatActivity() {
 
         if (tipo == 5 || tipo == 8 || tipo == 9) {
             menu.setHeaderTitle("Acción de Archivo")
-            menu.add(0, 1, 0, "Guardar en Descargas").setOnMenuItemClickListener {
+            menu.add(0, 1, 0, "Guardar de forma privada").setOnMenuItemClickListener {
                 val url = result.extra
                 if (url != null) {
                     gestionarDescarga(url, webView.settings.userAgentString, null, null)
@@ -146,7 +151,7 @@ class NavegadorActivity : AppCompatActivity() {
     // --- SEGURIDAD 2: AUTO-CIERRE AL SALIR ---
     override fun onStop() {
         super.onStop()
-        finish() // Si sales del navegador, se cierra la sesión
+        finish() 
     }
 
     // --- SEGURIDAD 3: LIMPIEZA TOTAL AL CERRAR ---
@@ -163,7 +168,7 @@ class NavegadorActivity : AppCompatActivity() {
         if (webView.canGoBack()) {
             webView.goBack()
         } else {
-            finish() // Cerramos la actividad para activar el auto-cierre
+            finish() 
         }
     }
 
