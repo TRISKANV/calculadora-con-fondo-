@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -18,14 +19,25 @@ class MainActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // --- SEGURIDAD: Evita capturas y oculte el teclado en multitarea ---
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         setContentView(R.layout.activity_main)
 
         tvExpresion = findViewById(R.id.tvExpresion)
         tvResultado = findViewById(R.id.tvResultado)
 
         val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
+        
+        // Camuflaje inicial: Si no hay clave, no decimos "Crea contraseña" (es delatador)
+        // Decimos algo como "0" o simplemente nada.
         if (prefs.getString("clave", null) == null) {
-            tvExpresion.text = "Crea tu contraseña"
+            tvExpresion.text = "" 
+            Toast.makeText(this, "Bienvenido: Configura tu PIN y presiona =", Toast.LENGTH_LONG).show()
         }
 
         val root = findViewById<ViewGroup>(R.id.rootLayout)
@@ -52,10 +64,6 @@ class MainActivity : AppCompatActivity() {
     private fun alPresionarBoton(valor: String) {
         val actual = tvExpresion.text.toString()
         
-        if (actual == "Crea tu contraseña") {
-            tvExpresion.text = ""
-        }
-
         when (valor) {
             "AC" -> {
                 tvExpresion.text = ""
@@ -65,7 +73,6 @@ class MainActivity : AppCompatActivity() {
                 if (actual.isNotEmpty()) tvExpresion.text = actual.dropLast(1)
             }
             ".", "+", "-", "×", "÷" -> {
-                // REGLA DE ORO: No repetir operadores ni empezar con ellos (excepto el menos)
                 if (actual.isNotEmpty()) {
                     val ultimoChar = actual.last().toString()
                     if (ultimoChar == "+" || ultimoChar == "-" || ultimoChar == "×" || ultimoChar == "÷" || ultimoChar == ".") {
@@ -84,29 +91,32 @@ class MainActivity : AppCompatActivity() {
         ejecutarCalculo(false)
     }
 
-  private fun procesarIgual() {
+    private fun procesarIgual() {
         val entrada = tvExpresion.text.toString()
         val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
         val passGuardada = prefs.getString("clave", null)
 
         if (passGuardada == null) {
-            // Lógica de creación de clave (solo números)
+            // Creación inicial
             if (entrada.length >= 4 && entrada.all { it.isDigit() }) {
                 prefs.edit().putString("clave", entrada).apply()
-                Toast.makeText(this, "✅ CLAVE GUARDADA", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "✅ PIN CONFIGURADO", Toast.LENGTH_SHORT).show()
                 tvExpresion.text = ""
                 tvResultado.text = "0"
             } else {
-                Toast.makeText(this, "Escribí 4 números y tocá =", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Ingresa un PIN de 4 dígitos", Toast.LENGTH_SHORT).show()
             }
         } else if (entrada == passGuardada) {
-            // --- MEJORA DE SEGURIDAD 
-            tvExpresion.text = ""  // Borramos la clave de la pantalla
-            tvResultado.text = "0" // Reiniciamos el resultado
+            // --- ACCESO A BÓVEDA ---
+            tvExpresion.text = ""  
+            tvResultado.text = "0" 
             
-            // Entramos a la bóveda
-            startActivity(Intent(this, BovedaActivity::class.java))
+            val intent = Intent(this, BovedaActivity::class.java)
+            // FLAG_ACTIVITY_CLEAR_TOP evita que se queden actividades colgadas
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
         } else {
+            // Es una operación matemática normal
             ejecutarCalculo(true)
             if (tvResultado.text != "Error") {
                 tvExpresion.text = tvResultado.text
@@ -121,7 +131,6 @@ class MainActivity : AppCompatActivity() {
         try {
             texto = texto.replace("×", "*").replace("÷", "/")
             
-            // Auto-cierre de paréntesis
             val abiertos = texto.count { it == '(' }
             val cerrados = texto.count { it == ')' }
             for (i in 1..(abiertos - cerrados)) texto += ")"
@@ -129,7 +138,6 @@ class MainActivity : AppCompatActivity() {
             val expresion = ExpressionBuilder(texto).build()
             val res = expresion.evaluate()
             
-            // Manejo de División por Cero
             if (res.isInfinite() || res.isNaN()) {
                 tvResultado.text = "Error"
                 return
