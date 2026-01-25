@@ -25,7 +25,6 @@ class DescargasActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // --- SEGURIDAD 1: BLOQUEO DE CAPTURAS ---
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -34,7 +33,6 @@ class DescargasActivity : AppCompatActivity() {
         supportActionBar?.hide()
         setContentView(R.layout.activity_descargas)
 
-        // Inicializar vistas del nuevo XML
         rvDescargas = findViewById(R.id.rvDescargas)
         layoutVacio = findViewById(R.id.layoutVacio)
         
@@ -44,11 +42,9 @@ class DescargasActivity : AppCompatActivity() {
     }
 
     private fun cargarDescargasPrivadas() {
-        // Buscamos en la carpeta privada (Android/data/com.tuapp.calculadora/files/Download)
         val carpetaPrivada = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
         listaArchivos = carpetaPrivada?.listFiles()?.toMutableList() ?: mutableListOf()
 
-        // Control de estado vacío (Camuflaje)
         if (listaArchivos.isEmpty()) {
             layoutVacio.visibility = View.VISIBLE
             rvDescargas.visibility = View.GONE
@@ -56,7 +52,6 @@ class DescargasActivity : AppCompatActivity() {
             layoutVacio.visibility = View.GONE
             rvDescargas.visibility = View.VISIBLE
             
-            // Configurar el adaptador con los clicks
             adapter = DescargasAdapter(
                 listaArchivos,
                 onClick = { archivo -> abrirArchivoSeguro(archivo) },
@@ -70,7 +65,7 @@ class DescargasActivity : AppCompatActivity() {
         try {
             val uri: Uri = FileProvider.getUriForFile(
                 this,
-                "${packageName}.fileprovider",
+                "${applicationContext.packageName}.fileprovider",
                 file
             )
             
@@ -92,17 +87,16 @@ class DescargasActivity : AppCompatActivity() {
             .setPositiveButton("Borrar") { _, _ ->
                 if (archivo.delete()) {
                     Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
-                    cargarDescargasPrivadas() // Recargar lista
+                    cargarDescargasPrivadas() 
                 }
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    // --- SEGURIDAD 2: AUTO-CIERRE ---
     override fun onStop() {
         super.onStop()
-        finish() // Cierra la actividad al salir para que no quede en segundo plano
+        finish()
     }
 
     override fun onBackPressed() {
