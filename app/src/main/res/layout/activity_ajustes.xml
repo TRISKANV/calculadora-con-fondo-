@@ -4,90 +4,86 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#121212"
-    android:padding="16dp">
+    android:padding="20dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Camuflaje de Icono"
+        android:text="Personalizar Icono"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:textSize="22sp"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="30dp" />
 
-    <LinearLayout
-        android:id="@+id/btnIconoCranio"
+    <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_item_menu"
-        android:padding="12dp"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="12dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:src="@drawable/ic_launcher" />
+        android:columnCount="2"
+        android:alignmentMode="alignMargins"
+        android:rowOrderPreserved="false">
 
         <LinearLayout
+            android:id="@+id/btnIconoCranio"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_columnWeight="1"
             android:orientation="vertical"
-            android:layout_marginStart="16dp">
+            android:gravity="center"
+            android:padding="10dp"
+            android:background="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_calculadora_2" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Estilo Dark"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nombre: Calculadora"
-                android:textColor="#888888" />
+                android:text="Cranio"
+                android:textColor="#BBBBBB"
+                android:layout_marginTop="8dp" />
         </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/btnIconoClima"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_item_menu"
-        android:padding="12dp"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="12dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-    android:id="@+id/icono_clima"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:src="@drawable/ic_calculadora_1" />
 
         <LinearLayout
+            android:id="@+id/btnIconoClima"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_columnWeight="1"
             android:orientation="vertical"
-            android:layout_marginStart="16dp">
+            android:gravity="center"
+            android:padding="10dp"
+            android:background="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_calculadora_3" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Camuflaje Clima"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nombre: Tiempo"
-                android:textColor="#888888" />
+                android:text="Clima"
+                android:textColor="#BBBBBB"
+                android:layout_marginTop="8dp" />
         </LinearLayout>
-    </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnIconoClassic"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="10dp"
+            android:background="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_calculadora_2" /> <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Classic"
+                android:textColor="#BBBBBB"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+    </GridLayout>
 
 </LinearLayout>
