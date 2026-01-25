@@ -33,28 +33,22 @@ class DescargasAdapter(
         val archivo = archivos[position]
         
         holder.nombre.text = archivo.name
-        holder.detalle.text = "${formatearTamaño(archivo.length())} • Toque para abrir"
+        holder.detalle.text = "${formatearTamaño(archivo.length())} • Abrir"
 
-        // --- Mejora en Lógica de Iconos ---
         val extension = archivo.extension.lowercase()
         val resIcono = when {
-            extension in listOf("jpg", "jpeg", "png", "webp", "gif") -> android.R.drawable.ic_menu_gallery
-            extension == "apk" -> android.R.drawable.sym_def_app_icon
+            extension in listOf("jpg", "jpeg", "png", "webp") -> android.R.drawable.ic_menu_gallery
             extension == "pdf" -> android.R.drawable.ic_menu_edit
-            extension in listOf("mp4", "mkv", "avi", "mov") -> android.R.drawable.ic_media_play
-            extension in listOf("zip", "rar", "7z") -> android.R.drawable.ic_menu_save
+            extension in listOf("mp4", "mkv") -> android.R.drawable.ic_media_play
             else -> android.R.drawable.ic_input_get
         }
         holder.icono.setImageResource(resIcono)
 
-        // Click normal: Abrir archivo
-        holder.itemView.setOnClickListener {
-            onClick(archivo)
-        }
+        holder.itemView.setOnClickListener { onClick(archivo) }
         
-        // Click largo: Borrar archivo (Usando bindingAdapterPosition por seguridad)
         holder.itemView.setOnLongClickListener {
-            val currentPos = holder.bindingAdapterPosition
+            // Cambio de bindingAdapterPosition a adapterPosition para compatibilidad
+            val currentPos = holder.adapterPosition
             if (currentPos != RecyclerView.NO_POSITION) {
                 onLongClick(currentPos)
             }
@@ -64,10 +58,9 @@ class DescargasAdapter(
 
     override fun getItemCount(): Int = archivos.size
 
-    // Función de formateo limpia y eficiente
     private fun formatearTamaño(size: Long): String {
         if (size <= 0) return "0 B"
-        val unidades = arrayOf("B", "KB", "MB", "GB", "TB")
+        val unidades = arrayOf("B", "KB", "MB", "GB")
         val digitoGrupo = (log10(size.toDouble()) / log10(1024.0)).toInt()
         return DecimalFormat("#,##0.#").format(size / 1024.0.pow(digitoGrupo.toDouble())) + " " + unidades[digitoGrupo]
     }
