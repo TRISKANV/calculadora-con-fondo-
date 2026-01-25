@@ -8,6 +8,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.text.DecimalFormat
+import kotlin.math.log10
+import kotlin.math.pow
 
 class DescargasAdapter(
     private val archivos: MutableList<File>,
@@ -31,37 +33,42 @@ class DescargasAdapter(
         val archivo = archivos[position]
         
         holder.nombre.text = archivo.name
-        holder.detalle.text = formatearTamaño(archivo.length())
+        holder.detalle.text = "${formatearTamaño(archivo.length())} • Toque para abrir"
 
-        // Iconos según extensión
+        // --- Mejora en Lógica de Iconos ---
         val extension = archivo.extension.lowercase()
-        val resIcono = when (extension) {
-            "jpg", "jpeg", "png", "webp" -> android.R.drawable.ic_menu_gallery
-            "apk" -> android.R.drawable.sym_def_app_icon
-            "pdf" -> android.R.drawable.ic_menu_edit
-            "mp4", "mkv" -> android.R.drawable.ic_media_play
+        val resIcono = when {
+            extension in listOf("jpg", "jpeg", "png", "webp", "gif") -> android.R.drawable.ic_menu_gallery
+            extension == "apk" -> android.R.drawable.sym_def_app_icon
+            extension == "pdf" -> android.R.drawable.ic_menu_edit
+            extension in listOf("mp4", "mkv", "avi", "mov") -> android.R.drawable.ic_media_play
+            extension in listOf("zip", "rar", "7z") -> android.R.drawable.ic_menu_save
             else -> android.R.drawable.ic_input_get
         }
         holder.icono.setImageResource(resIcono)
 
-        // Click normal
+        // Click normal: Abrir archivo
         holder.itemView.setOnClickListener {
             onClick(archivo)
         }
         
-        // Click largo
+        // Click largo: Borrar archivo (Usando bindingAdapterPosition por seguridad)
         holder.itemView.setOnLongClickListener {
-            onLongClick(holder.adapterPosition)
+            val currentPos = holder.bindingAdapterPosition
+            if (currentPos != RecyclerView.NO_POSITION) {
+                onLongClick(currentPos)
+            }
             true
         }
     }
 
     override fun getItemCount(): Int = archivos.size
 
+    // Función de formateo limpia y eficiente
     private fun formatearTamaño(size: Long): String {
         if (size <= 0) return "0 B"
-        val unidades = arrayOf("B", "KB", "MB", "GB")
-        val digitoGrupo = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
-        return DecimalFormat("#,##0.#").format(size / Math.pow(1024.0, digitoGrupo.toDouble())) + " " + unidades[digitoGrupo]
+        val unidades = arrayOf("B", "KB", "MB", "GB", "TB")
+        val digitoGrupo = (log10(size.toDouble()) / log10(1024.0)).toInt()
+        return DecimalFormat("#,##0.#").format(size / 1024.0.pow(digitoGrupo.toDouble())) + " " + unidades[digitoGrupo]
     }
 }
