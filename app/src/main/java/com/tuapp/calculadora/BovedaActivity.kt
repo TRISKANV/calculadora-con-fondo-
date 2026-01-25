@@ -14,7 +14,7 @@ class BovedaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // --- MEJORA DE SEGURIDAD 1: Bloquear Capturas y ocultar en Apps Recientes ---
+        // Bloquear Capturas por seguridad
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -32,45 +32,28 @@ class BovedaActivity : AppCompatActivity() {
 
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.nav_fotos -> {
-                    startActivity(Intent(this, GaleriaActivity::class.java))
-                }
-                R.id.nav_videos -> {
-                    startActivity(Intent(this, VideoActivity::class.java))
-                }
-                R.id.nav_internet -> {
-                    startActivity(Intent(this, NavegadorActivity::class.java))
-                }
-                R.id.nav_notas -> {
-                    startActivity(Intent(this, NotasActivity::class.java))
-                }
-                R.id.nav_descargas -> {
-                    startActivity(Intent(this, DescargasActivity::class.java))
-                }
-                R.id.nav_ajustes -> {
-                    val intent = Intent(this, AjustesActivity::class.java)
-                    startActivity(intent)
-                }
+                R.id.nav_fotos -> startActivity(Intent(this, GaleriaActivity::class.java))
+                R.id.nav_videos -> startActivity(Intent(this, VideoActivity::class.java))
+                R.id.nav_internet -> startActivity(Intent(this, NavegadorActivity::class.java))
+                R.id.nav_notas -> startActivity(Intent(this, NotasActivity::class.java))
+                R.id.nav_descargas -> startActivity(Intent(this, DescargasActivity::class.java))
+                R.id.nav_ajustes -> startActivity(Intent(this, AjustesActivity::class.java))
             }
             drawerLayout.closeDrawer(GravityCompat.END)
             true
         }
     }
 
-    // --- MEJORA DE SEGURIDAD 2: Auto-Cierre ---
-    // Si el usuario sale al menú de inicio o bloquea el cel, la bóveda se cierra.
-    // Al volver a entrar, tendrá que pasar por la calculadora.
-    override fun onStop() {
-        super.onStop()
-        finish() 
-    }
+    // 
+    // Si necesitas que se cierre al salir de la app totalmente, existen otros métodos, 
+    // 
 
     override fun onBackPressed() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.END)) {
             drawerLayout.closeDrawer(GravityCompat.END)
         } else {
-            // Si presionas atrás fuera del menú, cerramos la bóveda por seguridad
+            /
             finish()
         }
     }
