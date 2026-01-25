@@ -13,36 +13,40 @@ class AjustesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ajustes)
 
-        findViewById<LinearLayout>(R.id.btnIconoCranio).setOnClickListener {
-            activarIcono("AliasCranio")
-        }
+        val btnCranio = findViewById<LinearLayout>(R.id.btnIconoCranio)
+        val btnClima = findViewById<LinearLayout>(R.id.btnIconoClima)
+        val btnClassic = findViewById<LinearLayout>(R.id.btnIconoClassic)
 
-        findViewById<LinearLayout>(R.id.btnIconoClima).setOnClickListener {
-            activarIcono("AliasClima")
-        }
+        btnCranio.setOnClickListener { cambiarIcono("AliasCranio") }
+        btnClima.setOnClickListener { cambiarIcono("AliasClima") }
+        btnClassic.setOnClickListener { cambiarIcono("AliasClassic") }
     }
 
-    private fun activarIcono(aliasName: String) {
-        val aliases = listOf("AliasCranio", "AliasClima", "AliasClassic")
-        val packageManager = packageManager
+    private fun cambiarIcono(nombreAlias: String) {
+        val paquete = packageName
+        val componentes = listOf(
+            "$paquete.AliasCranio",
+            "$paquete.AliasClima",
+            "$paquete.AliasClassic"
+        )
 
-        aliases.forEach { alias ->
-            val state = if (alias == aliasName) {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        try {
+            componentes.forEach { nombreFull ->
+                val nuevoEstado = if (nombreFull == "$paquete.$nombreAlias") {
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                } else {
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                }
+
+                packageManager.setComponentEnabledSetting(
+                    ComponentName(this, nombreFull),
+                    nuevoEstado,
+                    PackageManager.DONT_KILL_APP
+                )
             }
-
-            packageManager.setComponentEnabledSetting(
-                ComponentName(this, "com.tuapp.calculadora.$alias"),
-                state,
-                PackageManager.DONT_KILL_APP
-            )
+            Toast.makeText(this, "Icono cambiado. La app se actualizará en unos segundos.", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-
-        Toast.makeText(this, "Cerrando app para aplicar cambios...", Toast.LENGTH_LONG).show()
-        
-        // Es necesario cerrar la app para que el sistema refresque el icono
-        finishAffinity()
     }
 }
