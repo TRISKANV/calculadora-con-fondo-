@@ -14,7 +14,7 @@ class BovedaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Bloquear Capturas por seguridad
+        // SEGURIDAD: Bloquear capturas de pantalla
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -26,34 +26,46 @@ class BovedaActivity : AppCompatActivity() {
         val btnAbrirMenu = findViewById<ImageButton>(R.id.btnAbrirMenu)
         val navView = findViewById<NavigationView>(R.id.navigationView)
 
+        // Abrir el menú lateral
         btnAbrirMenu.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.END)
         }
 
+        // Configurar acciones del menú lateral
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.nav_fotos -> startActivity(Intent(this, GaleriaActivity::class.java))
-                R.id.nav_videos -> startActivity(Intent(this, VideoActivity::class.java))
-                R.id.nav_internet -> startActivity(Intent(this, NavegadorActivity::class.java))
-                R.id.nav_notas -> startActivity(Intent(this, NotasActivity::class.java))
-                R.id.nav_descargas -> startActivity(Intent(this, DescargasActivity::class.java))
-                R.id.nav_ajustes -> startActivity(Intent(this, AjustesActivity::class.java))
+                R.id.nav_fotos -> {
+                    startActivity(Intent(this, GaleriaActivity::class.java))
+                }
+                R.id.nav_videos -> {
+                    startActivity(Intent(this, VideoActivity::class.java))
+                }
+                R.id.nav_internet -> {
+                    startActivity(Intent(this, NavegadorActivity::class.java))
+                }
+                R.id.nav_notas -> {
+                    startActivity(Intent(this, NotasActivity::class.java))
+                }
+                R.id.nav_descargas -> {
+                    startActivity(Intent(this, DescargasActivity::class.java))
+                }
+                R.id.nav_ajustes -> {
+                    startActivity(Intent(this, AjustesActivity::class.java))
+                }
             }
             drawerLayout.closeDrawer(GravityCompat.END)
             true
         }
     }
 
-    // 
-    // Si necesitas que se cierre al salir de la app totalmente, existen otros métodos, 
-    // 
+    // Se eliminó onStop para evitar cierres inesperados al importar archivos
 
     override fun onBackPressed() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.END)) {
             drawerLayout.closeDrawer(GravityCompat.END)
         } else {
-            /
+            // Cerramos la actividad manualmente al presionar atrás
             finish()
         }
     }
