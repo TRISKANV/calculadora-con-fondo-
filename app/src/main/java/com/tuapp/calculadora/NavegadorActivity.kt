@@ -148,12 +148,6 @@ class NavegadorActivity : AppCompatActivity() {
         }
     }
 
-    // --- SEGURIDAD 2: AUTO-CIERRE AL SALIR ---
-    override fun onStop() {
-        super.onStop()
-        finish() 
-    }
-
     // --- SEGURIDAD 3: LIMPIEZA TOTAL AL CERRAR ---
     override fun onDestroy() {
         webView.clearCache(true)
