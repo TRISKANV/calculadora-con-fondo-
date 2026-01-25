@@ -33,6 +33,7 @@ class DescargasActivity : AppCompatActivity() {
         supportActionBar?.hide()
         setContentView(R.layout.activity_descargas)
 
+        // IMPORTANTE: Estos IDs deben coincidir con tu XML
         rvDescargas = findViewById(R.id.rvDescargas)
         layoutVacio = findViewById(R.id.layoutVacio)
         
