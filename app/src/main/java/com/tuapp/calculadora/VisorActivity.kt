@@ -12,8 +12,7 @@ class VisorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 
-        // 
+        // Mantenemos la seguridad de capturas
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -24,31 +23,27 @@ class VisorActivity : AppCompatActivity() {
         val viewPager = findViewById<ViewPager2>(R.id.viewPagerFotos)
         val btnCerrar = findViewById<ImageButton>(R.id.btnCerrarVisor)
 
-        // 
+        // Cargar lista
         val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
         val listaFotos = carpetaPrivada.listFiles()?.filter { it.isFile }?.toList() ?: emptyList()
 
-        //
+        // Obtener posición
         val posicionInicial = intent.getIntExtra("posicion", 0)
 
-        // 
+        // Adaptador
         val adapter = VisorAdapter(listaFotos)
         viewPager.adapter = adapter
         
-        //
+        // Ir a la foto seleccionada
         viewPager.setCurrentItem(posicionInicial, false)
 
         btnCerrar.setOnClickListener { finish() }
     }
 
+    // 
     
-    override fun onStop() {
-        super.onStop()
-        finish()
-    }
-
     override fun onBackPressed() {
-        // 
+        super.onBackPressed() // 
         finish()
     }
 }
