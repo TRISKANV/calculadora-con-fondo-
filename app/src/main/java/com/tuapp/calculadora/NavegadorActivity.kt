@@ -15,11 +15,11 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.CookieManager
+import android.webkit.MimeTypeMap
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 
-// Clase para definir cada motor de búsqueda
 data class MotorBusqueda(val nombre: String, val url: String, val icono: Int)
 
 class NavegadorActivity : AppCompatActivity() {
@@ -31,7 +31,6 @@ class NavegadorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // --- SEGURIDAD 1: BLOQUEO DE CAPTURAS Y MULTITAREA ---
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -39,14 +38,12 @@ class NavegadorActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_navegador)
 
-        // Inicializar vistas
         webView = findViewById(R.id.webView)
         progressBar = findViewById(R.id.pbCarga)
         val etUrl = findViewById<EditText>(R.id.etUrl)
         val btnIr = findViewById<ImageButton>(R.id.btnIr)
         val spinnerMotores = findViewById<Spinner>(R.id.spinnerMotores)
 
-        // 1. Configurar la lista de motores de búsqueda
         val listaMotores = listOf(
             MotorBusqueda("Google", "https://www.google.com/search?q=", android.R.drawable.ic_menu_search),
             MotorBusqueda("DuckDuckGo", "https://duckduckgo.com/?q=", android.R.drawable.ic_menu_view),
@@ -54,7 +51,6 @@ class NavegadorActivity : AppCompatActivity() {
             MotorBusqueda("Searx", "https://searx.be/search?q=", android.R.drawable.ic_menu_manage)
         )
 
-        // 2. Adaptador para el Spinner
         val adapter = MotorAdapter(this, listaMotores)
         spinnerMotores.adapter = adapter
 
@@ -65,7 +61,6 @@ class NavegadorActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // 3. Configuración del WebView (Modo Incógnito Forzado)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.databaseEnabled = false 
@@ -106,7 +101,17 @@ class NavegadorActivity : AppCompatActivity() {
     private fun gestionarDescarga(url: String, userAgent: String, contentDisposition: String?, mimetype: String?) {
         try {
             val request = DownloadManager.Request(Uri.parse(url))
-            val fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
+            
+            // --- MEJORA: DETECTOR DE EXTENSIÓN REAL ---
+            var fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
+            
+            // Si el nombre termina en .bin, intentamos corregirlo con el mimetype
+            if (fileName.endsWith(".bin") && mimetype != null) {
+                val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimetype)
+                if (extension != null) {
+                    fileName = fileName.substringBeforeLast(".") + "." + extension
+                }
+            }
 
             request.setMimeType(mimetype)
             val cookies = CookieManager.getInstance().getCookie(url)
@@ -116,16 +121,13 @@ class NavegadorActivity : AppCompatActivity() {
             request.setTitle(fileName)
             request.setDescription("Protegiendo archivo en la boveda...")
             
-            // --- CAMBIO CLAVE: DESCARGA PRIVADA ---
-            // Los archivos se guardan en Android/data/com.tuapp.calculadora/files/Download
-            // Estos archivos NO aparecen en la Galería ni en el Administrador de Archivos común.
             request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
             val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
 
-            Toast.makeText(this, "Descarga segura iniciada...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Descarga iniciada: $fileName", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error al descargar: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -148,7 +150,6 @@ class NavegadorActivity : AppCompatActivity() {
         }
     }
 
-    // --- SEGURIDAD 3: LIMPIEZA TOTAL AL CERRAR ---
     override fun onDestroy() {
         webView.clearCache(true)
         webView.clearHistory()
