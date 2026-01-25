@@ -4,19 +4,23 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.view.View
 import android.view.WindowManager
-import android.widget.ArrayAdapter
-import android.widget.ListView
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 
 class DescargasActivity : AppCompatActivity() {
 
-    private lateinit var listView: ListView
-    private lateinit var listaArchivos: MutableList<File>
+    private lateinit var rvDescargas: RecyclerView
+    private lateinit var layoutVacio: LinearLayout
+    private lateinit var adapter: DescargasAdapter
+    private var listaArchivos = mutableListOf<File>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,42 +34,43 @@ class DescargasActivity : AppCompatActivity() {
         supportActionBar?.hide()
         setContentView(R.layout.activity_descargas)
 
-        listView = findViewById(R.id.lvDescargas) // Asegúrate de tener un ListView con este ID en tu XML
+        // Inicializar vistas del nuevo XML
+        rvDescargas = findViewById(R.id.rvDescargas)
+        layoutVacio = findViewById(R.id.layoutVacio)
+        
+        rvDescargas.layoutManager = LinearLayoutManager(this)
 
         cargarDescargasPrivadas()
     }
 
     private fun cargarDescargasPrivadas() {
-        // Buscamos en la misma carpeta privada donde el Navegador guarda los archivos
+        // Buscamos en la carpeta privada (Android/data/com.tuapp.calculadora/files/Download)
         val carpetaPrivada = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
         listaArchivos = carpetaPrivada?.listFiles()?.toMutableList() ?: mutableListOf()
 
+        // Control de estado vacío (Camuflaje)
         if (listaArchivos.isEmpty()) {
-            Toast.makeText(this, "No hay archivos protegidos", Toast.LENGTH_SHORT).show()
-        }
-
-        val nombresArchivos = listaArchivos.map { it.name }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, nombresArchivos)
-        listView.adapter = adapter
-
-        // Al tocar un archivo: Abrirlo
-        listView.setOnItemClickListener { _, _, position, _ ->
-            abrirArchivoSeguro(listaArchivos[position])
-        }
-
-        // Al mantener presionado: Borrarlo
-        listView.setOnItemLongClickListener { _, _, position, _ ->
-            mostrarDialogoBorrar(position)
-            true
+            layoutVacio.visibility = View.VISIBLE
+            rvDescargas.visibility = View.GONE
+        } else {
+            layoutVacio.visibility = View.GONE
+            rvDescargas.visibility = View.VISIBLE
+            
+            // Configurar el adaptador con los clicks
+            adapter = DescargasAdapter(
+                listaArchivos,
+                onClick = { archivo -> abrirArchivoSeguro(archivo) },
+                onLongClick = { posicion -> mostrarDialogoBorrar(posicion) }
+            )
+            rvDescargas.adapter = adapter
         }
     }
 
     private fun abrirArchivoSeguro(file: File) {
         try {
-            // Usamos FileProvider para poder abrir archivos desde la carpeta privada
             val uri: Uri = FileProvider.getUriForFile(
                 this,
-                "${applicationContext.packageName}.fileprovider",
+                "${packageName}.fileprovider",
                 file
             )
             
@@ -80,13 +85,14 @@ class DescargasActivity : AppCompatActivity() {
     }
 
     private fun mostrarDialogoBorrar(posicion: Int) {
-        AlertDialog.Builder(this)
+        val archivo = listaArchivos[posicion]
+        AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("Eliminar archivo")
-            .setMessage("¿Quieres borrar este archivo permanentemente de la bóveda?")
+            .setMessage("¿Borrar permanentemente ${archivo.name}?")
             .setPositiveButton("Borrar") { _, _ ->
-                if (listaArchivos[posicion].delete()) {
+                if (archivo.delete()) {
                     Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
-                    cargarDescargasPrivadas()
+                    cargarDescargasPrivadas() // Recargar lista
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -96,10 +102,11 @@ class DescargasActivity : AppCompatActivity() {
     // --- SEGURIDAD 2: AUTO-CIERRE ---
     override fun onStop() {
         super.onStop()
-        finish()
+        finish() // Cierra la actividad al salir para que no quede en segundo plano
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
         finish()
     }
 }
