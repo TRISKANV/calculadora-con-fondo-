@@ -23,7 +23,6 @@ class GaleriaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -38,20 +37,12 @@ class GaleriaActivity : AppCompatActivity() {
         
         cargarFotosDesdeBoveda()
 
-        // 
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 if (uri != null) {
-                    try {
-                        contentResolver.takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
-                        importarFotoABoveda(uri)
-                    } catch (e: Exception) {
-                        importarFotoABoveda(uri)
-                    }
+                    // Importamos la foto (el proceso de copiado)
+                    importarFotoABoveda(uri)
                 }
             }
         }
@@ -70,6 +61,9 @@ class GaleriaActivity : AppCompatActivity() {
         if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
         
         val archivosEnCarpeta = carpetaPrivada.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
+        
+        // Ordenar por fecha para que la última aparezca primero
+        archivosEnCarpeta.sortByDescending { it.lastModified() }
         
         listaFotos.clear()
         listaFotos.addAll(archivosEnCarpeta)
@@ -104,18 +98,16 @@ class GaleriaActivity : AppCompatActivity() {
                 }
             }
 
-            try {
-                contentResolver.delete(uriOriginal, null, null)
-            } catch (e: Exception) {
-                //
-            }
+            // Nota: Borrar la foto original (contentResolver.delete) suele fallar 
+            // en versiones nuevas de Android por permisos. El usuario deberá borrarla a mano
+            // o usar permisos de MediaStore si quieres hacerlo automático.
 
-            Toast.makeText(this, "Foto protegida con éxito", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Foto protegida", Toast.LENGTH_SHORT).show()
             cargarFotosDesdeBoveda()
             
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error de acceso", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error al importar", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -133,14 +125,9 @@ class GaleriaActivity : AppCompatActivity() {
         }
     }
 
-    // --- 
-    override fun onStop() {
-        super.onStop()
-        finish() 
-    }
+    // ELIMINADO EL onStop PARA EVITAR EL CIERRE AL ELEGIR FOTOS
 
     override fun onBackPressed() {
-        // 
-        finish()
+        finish() // Cerramos solo cuando el usuario toca atrás
     }
 }
