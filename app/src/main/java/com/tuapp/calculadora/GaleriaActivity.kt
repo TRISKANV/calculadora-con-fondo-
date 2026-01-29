@@ -19,10 +19,14 @@ class GaleriaActivity : AppCompatActivity() {
     private lateinit var rvGaleria: RecyclerView
     private lateinit var adapter: GaleriaAdapter
     private var listaFotos = mutableListOf<File>()
+    
+    // 
+    private val cryptoManager = CryptoManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // SEGURIDAD: Bloqueo de capturas y recents
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -41,8 +45,8 @@ class GaleriaActivity : AppCompatActivity() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 if (uri != null) {
-                    // Importamos la foto (el proceso de copiado)
-                    importarFotoABoveda(uri)
+                    //
+                    importarYCifrarFoto(uri)
                 }
             }
         }
@@ -60,9 +64,12 @@ class GaleriaActivity : AppCompatActivity() {
         val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
         if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
         
-        val archivosEnCarpeta = carpetaPrivada.listFiles()?.filter { it.isFile }?.toMutableList() ?: mutableListOf()
+        //
+        val archivosEnCarpeta = carpetaPrivada.listFiles()
+            ?.filter { it.isFile && it.name.endsWith(".enc") }
+            ?.toMutableList() ?: mutableListOf()
         
-        // Ordenar por fecha para que la última aparezca primero
+        // arriba
         archivosEnCarpeta.sortByDescending { it.lastModified() }
         
         listaFotos.clear()
@@ -85,29 +92,29 @@ class GaleriaActivity : AppCompatActivity() {
         }
     }
 
-    private fun importarFotoABoveda(uriOriginal: Uri) {
+    private fun importarYCifrarFoto(uriOriginal: Uri) {
         try {
-            val nombreArchivo = "SECRET_${System.currentTimeMillis()}.jpg"
+            //  cifrado
+            val nombreArchivo = "SECURE_${System.currentTimeMillis()}.enc"
             val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
             if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
+            
             val archivoDestino = File(carpetaPrivada, nombreArchivo)
 
+            // PROCESO DE CIFRADO PROFESIONAL
             contentResolver.openInputStream(uriOriginal)?.use { inputStream ->
                 FileOutputStream(archivoDestino).use { outputStream ->
-                    inputStream.copyTo(outputStream)
+                    //  AES-256
+                    cryptoManager.encrypt(inputStream, outputStream)
                 }
             }
 
-            // Nota: Borrar la foto original (contentResolver.delete) suele fallar 
-            // en versiones nuevas de Android por permisos. El usuario deberá borrarla a mano
-            // o usar permisos de MediaStore si quieres hacerlo automático.
-
-            Toast.makeText(this, "Foto protegida", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Foto cifrada y protegida ✅", Toast.LENGTH_SHORT).show()
             cargarFotosDesdeBoveda()
             
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error al importar", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error crítico en cifrado", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -120,14 +127,12 @@ class GaleriaActivity : AppCompatActivity() {
                 listaFotos.removeAt(posicion)
                 adapter.notifyItemRemoved(posicion)
                 adapter.notifyItemRangeChanged(posicion, listaFotos.size)
-                Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Eliminado permanentemente", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // ELIMINADO EL onStop PARA EVITAR EL CIERRE AL ELEGIR FOTOS
-
     override fun onBackPressed() {
-        finish() // Cerramos solo cuando el usuario toca atrás
+        finish()
     }
 }
