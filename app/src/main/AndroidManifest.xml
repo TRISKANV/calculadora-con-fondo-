@@ -65,6 +65,8 @@
         <activity android:name=".VisorActivity" android:exported="false" />
         <activity android:name=".ReproductorActivity" />
         <activity android:name=".DescargasActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity android:name=".VideoGaleriaActivity" android:screenOrientation="portrait" />
+        <activity android:name=".VideoActivity" android:screenOrientation="landscape" />
         
         <activity
             android:name=".NotasActivity"
