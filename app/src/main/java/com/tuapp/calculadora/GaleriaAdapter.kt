@@ -1,5 +1,7 @@
 package com.tuapp.calculadora
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,43 +9,51 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
+import java.io.FileInputStream
 
 class GaleriaAdapter(
-    private var listaFotos: MutableList<File>,
+    private val listaFotos: MutableList<File>,
     private val onFotoClick: (Int) -> Unit,
     private val onFotoDelete: (Int) -> Unit
-) : RecyclerView.Adapter<GaleriaAdapter.FotoViewHolder>() {
+) : RecyclerView.Adapter<GaleriaAdapter.ViewHolder>() {
 
-    class FotoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private val cryptoManager = CryptoManager()
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val ivThumbnail: ImageView = view.findViewById(R.id.ivThumbnail)
-        val btnBorrar: ImageButton = view.findViewById(R.id.btnBorrarFoto) // Agregaremos este ID al XML
+        val btnDelete: ImageButton = view.findViewById(R.id.btnDeleteFoto)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FotoViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_foto, parent, false)
-        return FotoViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_galeria, parent, false)
+        return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: FotoViewHolder, position: Int) {
-        val fotoFile = listaFotos[position]
-        
-        // Cargar miniatura
-        holder.ivThumbnail.setImageURI(android.net.Uri.fromFile(fotoFile))
-        
-        // Click para ver en grande
-        holder.ivThumbnail.setOnClickListener { onFotoClick(position) }
-        
-        // BOTÓN BORRAR REPARADO
-        holder.btnBorrar.setOnClickListener {
-            onFotoDelete(holder.adapterPosition) 
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val archivoCifrado = listaFotos[position]
+
+        // 
+        try {
+            val inputStream = FileInputStream(archivoCifrado)
+            val bytesDescifrados = cryptoManager.decrypt(inputStream)
+            
+            // TIP DE SENIOR: Decodificar con sampling para no agotar la RAM
+            val opciones = BitmapFactory.Options().apply {
+                inSampleSize = 4 
+            }
+            
+            val bitmap = BitmapFactory.decodeByteArray(bytesDescifrados, 0, bytesDescifrados.size, opciones)
+            holder.ivThumbnail.setImageBitmap(bitmap)
+            
+            inputStream.close()
+        } catch (e: Exception) {
+            holder.ivThumbnail.setImageResource(android.R.drawable.ic_menu_report_image)
         }
+
+        holder.itemView.setOnClickListener { onFotoClick(position) }
+        holder.btnDelete.setOnClickListener { onFotoDelete(position) }
     }
 
-    override fun getItemCount() = listaFotos.size
-
-    // Método para actualizar la lista sin errores
-    fun actualizarLista(nuevaLista: MutableList<File>) {
-        this.listaFotos = nuevaLista
-        notifyDataSetChanged()
-    }
+    override fun getItemCount(): Int = listaFotos.size
 }
