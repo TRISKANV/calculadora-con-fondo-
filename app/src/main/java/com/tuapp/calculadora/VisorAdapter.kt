@@ -15,12 +15,12 @@ class VisorAdapter(private val listaFotos: List<File>) :
     private val cryptoManager = CryptoManager()
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        // 
+        //
         val imageView: ImageView = view.findViewById(R.id.ivFotoFull)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        // 
+        //
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_visor_foto, parent, false)
         return ViewHolder(view)
@@ -29,13 +29,14 @@ class VisorAdapter(private val listaFotos: List<File>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val archivoCifrado = listaFotos[position]
 
-        var inputStream: FileInputStream? = null
+        var fis: FileInputStream? = null
         try {
-            inputStream = FileInputStream(archivoCifrado)
+            fis = FileInputStream(archivoCifrado)
             
             // 
-            val bytesDescifrados = cryptoManager.decrypt(inputStream)
+            val bytesDescifrados = cryptoManager.decrypt(fis)
             
+            // 
             val bitmap = BitmapFactory.decodeByteArray(bytesDescifrados, 0, bytesDescifrados.size)
             
             if (bitmap != null) {
@@ -43,16 +44,16 @@ class VisorAdapter(private val listaFotos: List<File>) :
             } else {
                 holder.imageView.setImageResource(android.R.drawable.ic_menu_report_image)
             }
-            
+
         } catch (e: Exception) {
             e.printStackTrace()
             holder.imageView.setImageResource(android.R.drawable.ic_menu_report_image)
         } finally {
             // 
             try {
-                inputStream?.close()
-            } catch (ioe: Exception) {
-                ioe.printStackTrace()
+                fis?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
