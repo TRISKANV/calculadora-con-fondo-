@@ -26,14 +26,17 @@ class ReproductorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reproductor)
 
+        // 
         videoView = findViewById(R.id.videoView)
         progressBar = findViewById(R.id.pbCargandoVideo)
         val btnSiguiente = findViewById<ImageButton>(R.id.btnSiguiente)
         val btnAnterior = findViewById<ImageButton>(R.id.btnAnterior)
 
+        // Recibimos los datos del Intent
         listaRutas = intent.getStringArrayExtra("lista_videos")
         posicionActual = intent.getIntExtra("posicion", 0)
 
+        // 
         val mediaController = MediaController(this)
         mediaController.setAnchorView(videoView)
         videoView.setMediaController(mediaController)
@@ -42,6 +45,8 @@ class ReproductorActivity : AppCompatActivity() {
 
         btnSiguiente.setOnClickListener { reproducirSiguiente() }
         btnAnterior.setOnClickListener { reproducirAnterior() }
+        
+        // 
         videoView.setOnCompletionListener { reproducirSiguiente() }
     }
 
@@ -51,35 +56,43 @@ class ReproductorActivity : AppCompatActivity() {
             val pathCifrado = rutas[posicionActual]
             descifrarVideo(pathCifrado)
         } else {
+            Toast.makeText(this, "No hay más videos", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
     private fun descifrarVideo(pathCifrado: String) {
+        // 1. 
         progressBar.visibility = View.VISIBLE
-        
+        videoView.stopPlayback() 
+
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Borrar temporal anterior si existe
+                // Limpieza:
                 archivoTemporal?.delete()
                 
                 val archivoCifrado = File(pathCifrado)
-                archivoTemporal = File(cacheDir, "temp_video_${System.currentTimeMillis()}.mp4")
+                // 
+                archivoTemporal = File(cacheDir, "temp_reproductor_${System.currentTimeMillis()}.mp4")
                 
                 val fis = FileInputStream(archivoCifrado)
                 val fos = FileOutputStream(archivoTemporal)
                 
+                // DESCIFRADO
                 cryptoManager.decryptToStream(fis, fos)
                 
                 withContext(Dispatchers.Main) {
+                    // 
                     progressBar.visibility = View.GONE
-                    videoView.setVideoURI(Uri.fromFile(archivoTemporal))
-                    videoView.start()
+                    if (archivoTemporal?.exists() == true) {
+                        videoView.setVideoURI(Uri.fromFile(archivoTemporal))
+                        videoView.start()
+                    }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
-                    Toast.makeText(this@ReproductorActivity, "Error al descifrar video", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReproductorActivity, "Error al descifrar el archivo", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -91,7 +104,7 @@ class ReproductorActivity : AppCompatActivity() {
             posicionActual++
             cargarYReproducir()
         } else {
-            finish()
+            Toast.makeText(this, "Último video", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -99,11 +112,14 @@ class ReproductorActivity : AppCompatActivity() {
         if (posicionActual > 0) {
             posicionActual--
             cargarYReproducir()
+        } else {
+            Toast.makeText(this, "Primer video", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        // 
         archivoTemporal?.delete()
     }
 }
