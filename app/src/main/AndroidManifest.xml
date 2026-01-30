@@ -59,12 +59,22 @@
         </activity-alias>
 
         <activity android:name=".BovedaActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
-        <activity android:name=".NavegadorActivity" android:theme="@style/Theme.AppCompat.NoActionBar" />
+        
+        <activity 
+            android:name=".NavegadorActivity" 
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+
         <activity android:name=".GaleriaActivity" android:exported="false" />
         <activity android:name=".VideoActivity" android:exported="false" />
         <activity android:name=".VisorActivity" android:exported="false" />
-        <activity android:name=".ReproductorActivity" />
+        
+        <activity 
+            android:name=".ReproductorActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+
         <activity android:name=".DescargasActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
+        
         <activity android:name=".VideoGaleriaActivity" android:screenOrientation="portrait" />
         
         <activity
@@ -87,5 +97,5 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-        </application>
+    </application>
 </manifest>
