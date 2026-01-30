@@ -3,6 +3,7 @@ package com.tuapp.calculadora
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -24,19 +25,23 @@ class ReproductorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // SEGURIDAD: Bloqueo de capturas y ocultar en multitarea
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+        
         setContentView(R.layout.activity_reproductor)
 
-        // 
         videoView = findViewById(R.id.videoView)
         progressBar = findViewById(R.id.pbCargandoVideo)
         val btnSiguiente = findViewById<ImageButton>(R.id.btnSiguiente)
         val btnAnterior = findViewById<ImageButton>(R.id.btnAnterior)
 
-        // Recibimos los datos del Intent
         listaRutas = intent.getStringArrayExtra("lista_videos")
         posicionActual = intent.getIntExtra("posicion", 0)
 
-        // 
         val mediaController = MediaController(this)
         mediaController.setAnchorView(videoView)
         videoView.setMediaController(mediaController)
@@ -46,8 +51,17 @@ class ReproductorActivity : AppCompatActivity() {
         btnSiguiente.setOnClickListener { reproducirSiguiente() }
         btnAnterior.setOnClickListener { reproducirAnterior() }
         
-        // 
         videoView.setOnCompletionListener { reproducirSiguiente() }
+    }
+
+    /**
+     * BLINDAJE DE SEGURIDAD:
+     * Si el usuario sale de la app, cerramos el reproductor.
+     * Esto dispara onDestroy() y borra el video descifrado de la caché.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        finish()
     }
 
     private fun cargarYReproducir() {
@@ -56,33 +70,30 @@ class ReproductorActivity : AppCompatActivity() {
             val pathCifrado = rutas[posicionActual]
             descifrarVideo(pathCifrado)
         } else {
-            Toast.makeText(this, "No hay más videos", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Fin de la lista", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
     private fun descifrarVideo(pathCifrado: String) {
-        // 1. 
         progressBar.visibility = View.VISIBLE
         videoView.stopPlayback() 
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Limpieza:
-                archivoTemporal?.delete()
+                // Limpieza inmediata del temporal anterior antes de crear uno nuevo
+                borrarArchivoTemporal()
                 
                 val archivoCifrado = File(pathCifrado)
-                // 
-                archivoTemporal = File(cacheDir, "temp_reproductor_${System.currentTimeMillis()}.mp4")
+                archivoTemporal = File(cacheDir, "vault_stream_${System.currentTimeMillis()}.mp4")
                 
                 val fis = FileInputStream(archivoCifrado)
                 val fos = FileOutputStream(archivoTemporal)
                 
-                // DESCIFRADO
+                // DESCIFRADO AES
                 cryptoManager.decryptToStream(fis, fos)
                 
                 withContext(Dispatchers.Main) {
-                    // 
                     progressBar.visibility = View.GONE
                     if (archivoTemporal?.exists() == true) {
                         videoView.setVideoURI(Uri.fromFile(archivoTemporal))
@@ -92,7 +103,7 @@ class ReproductorActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
-                    Toast.makeText(this@ReproductorActivity, "Error al descifrar el archivo", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReproductorActivity, "Error de seguridad", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -104,7 +115,7 @@ class ReproductorActivity : AppCompatActivity() {
             posicionActual++
             cargarYReproducir()
         } else {
-            Toast.makeText(this, "Último video", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Es el último video", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -113,13 +124,26 @@ class ReproductorActivity : AppCompatActivity() {
             posicionActual--
             cargarYReproducir()
         } else {
-            Toast.makeText(this, "Primer video", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Es el primer video", Toast.LENGTH_SHORT).show()
         }
     }
 
+    private fun borrarArchivoTemporal() {
+        try {
+            archivoTemporal?.let {
+                if (it.exists()) it.delete()
+            }
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
     override fun onDestroy() {
+        videoView.stopPlayback()
+        borrarArchivoTemporal()
         super.onDestroy()
-        // 
-        archivoTemporal?.delete()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish()
     }
 }
