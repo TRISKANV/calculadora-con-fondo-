@@ -25,6 +25,7 @@ class DescargasActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // SEGURIDAD: Bloquear capturas y ocultar de la vista de recientes
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -33,13 +34,22 @@ class DescargasActivity : AppCompatActivity() {
         supportActionBar?.hide()
         setContentView(R.layout.activity_descargas)
 
-        // IMPORTANTE: Estos IDs deben coincidir con tu XML
         rvDescargas = findViewById(R.id.rvDescargas)
         layoutVacio = findViewById(R.id.layoutVacio)
         
         rvDescargas.layoutManager = LinearLayoutManager(this)
 
         cargarDescargasPrivadas()
+    }
+
+    /**
+     * BLINDAJE DE SEGURIDAD:
+     * Si el usuario sale de la app presionando Home o Recientes,
+     * cerramos la actividad para proteger el contenido.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        finish()
     }
 
     private fun cargarDescargasPrivadas() {
@@ -64,19 +74,26 @@ class DescargasActivity : AppCompatActivity() {
 
     private fun abrirArchivoSeguro(file: File) {
         try {
+            // Generamos la URI mediante el FileProvider definido en el Manifest
             val uri: Uri = FileProvider.getUriForFile(
                 this,
-                "${applicationContext.packageName}.fileprovider",
+                "${packageName}.fileprovider",
                 file
             )
             
+            // Determinamos el tipo de archivo (PDF, DOCX, etc.)
+            val mimeType = contentResolver.getType(uri) ?: "*/*"
+            
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, contentResolver.getType(uri))
+                setDataAndType(uri, mimeType)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                // Usamos FLAG_ACTIVITY_NO_HISTORY para que la app que abre el archivo
+                // tampoco lo guarde en su historial reciente de forma insegura
+                addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
             }
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(this, "No hay app para abrir este archivo", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No hay una aplicación para abrir este archivo", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -84,10 +101,10 @@ class DescargasActivity : AppCompatActivity() {
         val archivo = listaArchivos[posicion]
         AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("Eliminar archivo")
-            .setMessage("¿Borrar permanentemente ${archivo.name}?")
+            .setMessage("¿Deseas borrar permanentemente ${archivo.name}?")
             .setPositiveButton("Borrar") { _, _ ->
                 if (archivo.delete()) {
-                    Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Archivo eliminado", Toast.LENGTH_SHORT).show()
                     cargarDescargasPrivadas() 
                 }
             }
@@ -95,12 +112,8 @@ class DescargasActivity : AppCompatActivity() {
             .show()
     }
 
-    override fun onStop() {
-        super.onStop()
-        finish()
-    }
-
     override fun onBackPressed() {
+        // Al volver atrás, terminamos la actividad para regresar al menú de la bóveda
         super.onBackPressed()
         finish()
     }
