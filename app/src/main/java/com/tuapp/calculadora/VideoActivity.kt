@@ -27,13 +27,17 @@ class VideoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        // SEGURIDAD: Bloquear capturas y ocultar en la multitarea
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE, 
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+        
         setContentView(R.layout.activity_video)
 
         videoView = findViewById(R.id.videoViewFull)
         progressBar = findViewById(R.id.pbCargandoVideo)
         
-        // Obtenemos la ruta que mandamos desde VideoGaleriaActivity
         val rutaCifrada = intent.getStringExtra("ruta_video")
         
         if (!rutaCifrada.isNullOrEmpty()) {
@@ -44,28 +48,39 @@ class VideoActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * BLINDAJE CRÍTICO:
+     * Si el usuario sale de la app (Home o Recientes), matamos la actividad.
+     * Esto activa automáticamente el onDestroy() que borra el video temporal.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        finish() 
+    }
+
     private fun descifrarYReproducir(ruta: String) {
-        progressBar.visibility = View.VISIBLE // Mostramos el círculo
+        progressBar.visibility = View.VISIBLE
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val archivoCifrado = File(ruta)
-                archivoTemporal = File(cacheDir, "temp_${System.currentTimeMillis()}.mp4")
+                // Usamos un prefijo único para evitar conflictos
+                archivoTemporal = File(cacheDir, "temp_vault_${System.currentTimeMillis()}.mp4")
                 
                 val fis = FileInputStream(archivoCifrado)
                 val fos = FileOutputStream(archivoTemporal)
 
-                // Descifrado pesado en hilo secundario
+                // Descifrado AES-256 en hilo secundario
                 cryptoManager.decryptToStream(fis, fos)
 
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE // Ocultamos carga
+                    progressBar.visibility = View.GONE
                     iniciarPlayer()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
-                    Toast.makeText(this@VideoActivity, "Error al descifrar", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@VideoActivity, "Error de seguridad al procesar", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             }
@@ -76,12 +91,41 @@ class VideoActivity : AppCompatActivity() {
         val mc = MediaController(this)
         mc.setAnchorView(videoView)
         videoView.setMediaController(mc)
+        
+        // Cargamos el archivo temporal que ahora es un MP4 estándar
         videoView.setVideoURI(Uri.fromFile(archivoTemporal))
-        videoView.setOnPreparedListener { it.start() }
+        
+        videoView.setOnPreparedListener { mp ->
+            mp.start()
+        }
+
+        // Si el video termina solo, también borramos el temporal por seguridad
+        videoView.setOnCompletionListener {
+            limpiarTemporal()
+            finish()
+        }
+    }
+
+    private fun limpiarTemporal() {
+        try {
+            if (archivoTemporal?.exists() == true) {
+                archivoTemporal?.delete()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onDestroy() {
+        // Aseguramos que el video deje de sonar y se borre el rastro
+        videoView.stopPlayback()
+        limpiarTemporal()
         super.onDestroy()
-        archivoTemporal?.delete() // Seguridad: borramos el video descifrado
+    }
+
+    override fun onBackPressed() {
+        // Al salir con el botón atrás, cerramos todo limpiamente
+        super.onBackPressed()
+        finish()
     }
 }
