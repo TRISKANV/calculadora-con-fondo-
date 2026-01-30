@@ -10,13 +10,23 @@
         android:layout_height="match_parent"
         android:layout_centerInParent="true" />
 
+    <ProgressBar
+        android:id="@+id/pbCargandoVideo"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_centerInParent="true"
+        android:indeterminateTint="#FF4081"
+        android:visibility="gone"
+        android:elevation="10dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="50dp"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:elevation="5dp">
 
         <ImageButton
             android:id="@+id/btnAnterior"
@@ -25,9 +35,11 @@
             android:background="@android:color/transparent"
             android:src="@android:drawable/ic_media_previous"
             android:contentDescription="Anterior"
-            android:alpha="0.6"
+            android:alpha="0.8"
             android:padding="10dp"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitCenter"
+            app:tint="#FFFFFF"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
 
         <View
             android:layout_width="80dp"
@@ -40,9 +52,11 @@
             android:background="@android:color/transparent"
             android:src="@android:drawable/ic_media_next"
             android:contentDescription="Siguiente"
-            android:alpha="0.6"
+            android:alpha="0.8"
             android:padding="10dp"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitCenter"
+            app:tint="#FFFFFF"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
 
     </LinearLayout>
 
