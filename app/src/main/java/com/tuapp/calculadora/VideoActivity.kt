@@ -26,9 +26,10 @@ class VideoActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_SECURE
         )
         
+        // Asegúrate de que el archivo se llame activity_video.xml
         setContentView(R.layout.activity_video)
 
-        // 
+        // El ID aquí DEBE coincidir con el del XML
         videoView = findViewById(R.id.videoViewFull)
         
         val rutaCifrada = intent.getStringExtra("ruta_video")
@@ -45,16 +46,15 @@ class VideoActivity : AppCompatActivity() {
         try {
             val archivoCifrado = File(rutaCifrada)
             
-            // 
+            // Creamos un archivo temporal en la cache de la app
             archivoTemporal = File(cacheDir, "temp_video_${System.currentTimeMillis()}.mp4")
             
             val fis = FileInputStream(archivoCifrado)
             val fos = FileOutputStream(archivoTemporal)
 
-            //
+            // Desciframos el flujo del video
             cryptoManager.decryptToStream(fis, fos) 
 
-            // 
             val mediaController = MediaController(this)
             mediaController.setAnchorView(videoView)
             
@@ -82,7 +82,7 @@ class VideoActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // 
+        // Borramos el temporal para no dejar rastros descifrados
         try {
             archivoTemporal?.delete()
         } catch (e: Exception) {
