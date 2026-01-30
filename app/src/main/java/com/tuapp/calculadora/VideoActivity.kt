@@ -20,48 +20,73 @@ class VideoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Seguridad ante todo
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        // SEGURIDAD: Evita capturas de pantalla y grabaciones
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+        
         setContentView(R.layout.activity_video)
 
+        // 
         videoView = findViewById(R.id.videoViewFull)
-        val rutaCifrada = intent.getStringExtra("ruta_video") ?: return
-
-        prepararYReproducir(rutaCifrada)
+        
+        val rutaCifrada = intent.getStringExtra("ruta_video")
+        
+        if (rutaCifrada != null) {
+            prepararYReproducir(rutaCifrada)
+        } else {
+            Toast.makeText(this, "Ruta de video no encontrada", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 
     private fun prepararYReproducir(rutaCifrada: String) {
         try {
             val archivoCifrado = File(rutaCifrada)
             
-            // 1. Creamos un archivo temporal en la cache de la app
-            // La carpeta cache se borra sola si el sistema necesita espacio
+            // 
             archivoTemporal = File(cacheDir, "temp_video_${System.currentTimeMillis()}.mp4")
             
             val fis = FileInputStream(archivoCifrado)
             val fos = FileOutputStream(archivoTemporal)
 
-            // 2. Desciframos el video al archivo temporal
-            // Nota: En videos muy largos, esto puede tardar un par de segundos
+            //
             cryptoManager.decryptToStream(fis, fos) 
 
-            // 3. Reproducimos el temporal
+            // 
             val mediaController = MediaController(this)
             mediaController.setAnchorView(videoView)
-            videoView.setMediaController(mediaController)
-            videoView.setVideoURI(Uri.fromFile(archivoTemporal))
             
-            videoView.setOnPreparedListener { videoView.start() }
+            videoView.apply {
+                setMediaController(mediaController)
+                setVideoURI(Uri.fromFile(archivoTemporal))
+                
+                setOnPreparedListener { 
+                    it.start() 
+                }
+                
+                setOnErrorListener { _, _, _ ->
+                    Toast.makeText(this@VideoActivity, "Error en el formato del video", Toast.LENGTH_SHORT).show()
+                    finish()
+                    true
+                }
+            }
 
         } catch (e: Exception) {
-            Toast.makeText(this, "Error al reproducir video", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+            Toast.makeText(this, "Error al descifrar el video", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // 4. LIMPIEZA DE SENIOR: Borrar el rastro del video descifrado
-        archivoTemporal?.delete()
+        // 
+        try {
+            archivoTemporal?.delete()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
