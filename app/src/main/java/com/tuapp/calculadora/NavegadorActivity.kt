@@ -10,12 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.webkit.URLUtil
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.webkit.CookieManager
-import android.webkit.MimeTypeMap
+import android.webkit.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
@@ -31,6 +26,7 @@ class NavegadorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // SEGURIDAD: Bloquear capturas y ocultar de recientes
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -61,10 +57,21 @@ class NavegadorActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.databaseEnabled = false 
-        webView.webViewClient = WebViewClient()
+        // --- CONFIGURACIÓN AVANZADA DEL WEBVIEW ---
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true // Necesario para algunos reproductores modernos
+            allowFileAccess = true
+            javaScriptCanOpenWindowsAutomatically = true
+            mediaPlaybackRequiresUserGesture = false
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                return false // Permite que el WebView maneje los clics internamente
+            }
+        }
 
         registerForContextMenu(webView)
 
@@ -86,12 +93,23 @@ class NavegadorActivity : AppCompatActivity() {
             true
         }
 
-        webView.loadUrl("https://www.google.com")
+        // Carga inicial solo si es la primera vez (evita reseteo al girar)
+        if (savedInstanceState == null) {
+            webView.loadUrl("https://www.google.com")
+        }
+    }
+
+    /**
+     * SEGURIDAD: Si el usuario minimiza el navegador, lo cerramos.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        finish()
     }
 
     private fun cargarUrl(url: String) {
         val urlFinal = if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            motorActualUrl + url
+            if (url.contains(".") && !url.contains(" ")) "https://$url" else motorActualUrl + url
         } else {
             url
         }
@@ -101,11 +119,8 @@ class NavegadorActivity : AppCompatActivity() {
     private fun gestionarDescarga(url: String, userAgent: String, contentDisposition: String?, mimetype: String?) {
         try {
             val request = DownloadManager.Request(Uri.parse(url))
-            
-            // --- MEJORA: DETECTOR DE EXTENSIÓN REAL ---
             var fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
             
-            // Si el nombre termina en .bin, intentamos corregirlo con el mimetype
             if (fileName.endsWith(".bin") && mimetype != null) {
                 val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimetype)
                 if (extension != null) {
@@ -117,19 +132,19 @@ class NavegadorActivity : AppCompatActivity() {
             val cookies = CookieManager.getInstance().getCookie(url)
             request.addRequestHeader("cookie", cookies)
             request.addRequestHeader("User-Agent", userAgent)
-
             request.setTitle(fileName)
-            request.setDescription("Protegiendo archivo en la boveda...")
+            request.setDescription("Descargando de forma privada...")
             
+            // Guardamos en la carpeta privada de la app para que la galería pública no lo vea
             request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
             val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
 
-            Toast.makeText(this, "Descarga iniciada: $fileName", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Descarga iniciada", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "Error al descargar: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -138,19 +153,19 @@ class NavegadorActivity : AppCompatActivity() {
         val result = webView.hitTestResult
         val tipo = result.type
 
-        if (tipo == 5 || tipo == 8 || tipo == 9) {
-            menu.setHeaderTitle("Acción de Archivo")
-            menu.add(0, 1, 0, "Guardar de forma privada").setOnMenuItemClickListener {
-                val url = result.extra
-                if (url != null) {
-                    gestionarDescarga(url, webView.settings.userAgentString, null, null)
-                }
+        // Tipos 5 (imagen), 8 (video/media), 9 (link con media)
+        if (tipo == WebView.HitTestResult.IMAGE_TYPE || tipo == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+            menu.setHeaderTitle("Imagen Privada")
+            menu.add(0, 1, 0, "Guardar en la Bóveda").setOnMenuItemClickListener {
+                result.extra?.let { gestionarDescarga(it, webView.settings.userAgentString, null, null) }
                 true
             }
         }
     }
 
     override fun onDestroy() {
+        // Limpieza profunda al salir
+        webView.stopLoading()
         webView.clearCache(true)
         webView.clearHistory()
         webView.clearFormData()
