@@ -3,6 +3,7 @@ package com.tuapp.calculadora
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +21,13 @@ class NotasActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // --- SEGURIDAD: Bloqueo de capturas y ocultar contenido en multitarea ---
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         setContentView(R.layout.activity_notas)
 
         // Referencias del diseño
@@ -33,13 +41,12 @@ class NotasActivity : AppCompatActivity() {
         rvNotas = findViewById(R.id.rvNotas)
         rvNotas.layoutManager = LinearLayoutManager(this)
 
-        // Lógica de Contraseña Personalizada
         val prefs = getSharedPreferences("BovedaNotas", Context.MODE_PRIVATE)
         val pinGuardado = prefs.getString("pin_notas", null)
 
         // Ajustar textos según si ya existe un PIN
         if (pinGuardado == null) {
-            tvTitulo.text = "Configurar PIN"
+            tvTitulo.text = "Configurar PIN de Notas"
             btnEntrar.text = "Guardar y Entrar"
         } else {
             tvTitulo.text = "Bóveda de Notas"
@@ -53,16 +60,12 @@ class NotasActivity : AppCompatActivity() {
                 Toast.makeText(this, "Ingresa un PIN", Toast.LENGTH_SHORT).show()
             } else {
                 if (pinGuardado == null) {
-                    // Crea el PIN por primera vez
                     prefs.edit().putString("pin_notas", pinIngresado).apply()
                     Toast.makeText(this, "PIN configurado", Toast.LENGTH_SHORT).show()
-                    // Recargar la actividad para que pinGuardado ya no sea null o simplemente entrar
                     entrarANotas(layoutBloqueo, layoutContenido, btnNuevaNota)
                 } else if (pinIngresado == pinGuardado) {
-                    // El PIN es correcto
                     entrarANotas(layoutBloqueo, layoutContenido, btnNuevaNota)
                 } else {
-                    // El PIN es incorrecto
                     Toast.makeText(this, "PIN Incorrecto", Toast.LENGTH_SHORT).show()
                     etPin.text.clear()
                 }
@@ -72,6 +75,15 @@ class NotasActivity : AppCompatActivity() {
         btnNuevaNota.setOnClickListener {
             mostrarEditor(null)
         }
+    }
+
+    /**
+     * BLINDAJE: Si el usuario sale de la app, cerramos la actividad.
+     * Esto obliga a pasar por la calculadora Y por el PIN de notas de nuevo.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        finish()
     }
 
     private fun entrarANotas(bloqueo: View, contenido: View, btn: View) {
@@ -137,5 +149,11 @@ class NotasActivity : AppCompatActivity() {
         val json = gson.toJson(listaNotas)
         prefs.edit().putString("lista_notas_pro", json).apply()
         actualizarVista()
+    }
+
+    override fun onBackPressed() {
+        // Al presionar atrás, cerramos la actividad por completo
+        super.onBackPressed()
+        finish()
     }
 }
