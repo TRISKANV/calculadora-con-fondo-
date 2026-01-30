@@ -20,17 +20,15 @@ class GaleriaAdapter(
     private val cryptoManager = CryptoManager()
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        // 
+        // Estos IDs deben estar en tu item_foto.xml
         val ivThumbnail: ImageView = view.findViewById(R.id.ivThumbnail)
-        
-        // 
         val btnDelete: ImageButton = view.findViewById(R.id.btnBorrarFoto) 
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        // 
+        // CORREGIDO: item_foto (singular) para que coincida con tu XML
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_fotos, parent, false)
+            .inflate(R.layout.item_foto, parent, false)
         return ViewHolder(view)
     }
 
@@ -41,7 +39,7 @@ class GaleriaAdapter(
             val inputStream = FileInputStream(archivoCifrado)
             val bytesDescifrados = cryptoManager.decrypt(inputStream)
             
-            // 
+            // Decodificamos con sampleSize para no matar la memoria RAM
             val opciones = BitmapFactory.Options().apply {
                 inSampleSize = 4 
             }
@@ -51,7 +49,7 @@ class GaleriaAdapter(
             
             inputStream.close()
         } catch (e: Exception) {
-            // 
+            // Si el descifrado falla, mostramos el icono de error de Android
             holder.ivThumbnail.setImageResource(android.R.drawable.ic_menu_report_image)
         }
 
