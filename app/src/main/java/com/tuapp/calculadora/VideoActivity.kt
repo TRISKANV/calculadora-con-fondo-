@@ -33,66 +33,55 @@ class VideoActivity : AppCompatActivity() {
         videoView = findViewById(R.id.videoViewFull)
         progressBar = findViewById(R.id.pbCargandoVideo)
         
-        // RECUPERAMOS LA RUTA
+        // Obtenemos la ruta que mandamos desde VideoGaleriaActivity
         val rutaCifrada = intent.getStringExtra("ruta_video")
         
         if (!rutaCifrada.isNullOrEmpty()) {
-            prepararYReproducir(rutaCifrada)
+            descifrarYReproducir(rutaCifrada)
         } else {
-            Toast.makeText(this, "Error: Ruta de video no recibida", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: Ruta no encontrada", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
-    private fun prepararYReproducir(rutaCifrada: String) {
-        // Mostramos el círculo de carga
-        progressBar.visibility = View.VISIBLE
+    private fun descifrarYReproducir(ruta: String) {
+        progressBar.visibility = View.VISIBLE // Mostramos el círculo
 
-        // Usamos Corrutinas para no trabar la pantalla mientras descifra
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val archivoCifrado = File(rutaCifrada)
-                archivoTemporal = File(cacheDir, "temp_video_${System.currentTimeMillis()}.mp4")
+                val archivoCifrado = File(ruta)
+                archivoTemporal = File(cacheDir, "temp_${System.currentTimeMillis()}.mp4")
                 
                 val fis = FileInputStream(archivoCifrado)
                 val fos = FileOutputStream(archivoTemporal)
 
-                // Descifrado (esto puede tardar si el video es pesado)
+                // Descifrado pesado en hilo secundario
                 cryptoManager.decryptToStream(fis, fos)
 
                 withContext(Dispatchers.Main) {
-                    // Ocultamos carga y reproducimos
-                    progressBar.visibility = View.GONE
-                    configurarReproductor()
+                    progressBar.visibility = View.GONE // Ocultamos carga
+                    iniciarPlayer()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
-                    Toast.makeText(this@VideoActivity, "Error al procesar video", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@VideoActivity, "Error al descifrar", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             }
         }
     }
 
-    private fun configurarReproductor() {
-        val mediaController = MediaController(this)
-        mediaController.setAnchorView(videoView)
-        
-        videoView.apply {
-            setMediaController(mediaController)
-            setVideoURI(Uri.fromFile(archivoTemporal))
-            setOnPreparedListener { it.start() }
-            setOnErrorListener { _, _, _ ->
-                Toast.makeText(this@VideoActivity, "Video incompatible", Toast.LENGTH_SHORT).show()
-                finish()
-                true
-            }
-        }
+    private fun iniciarPlayer() {
+        val mc = MediaController(this)
+        mc.setAnchorView(videoView)
+        videoView.setMediaController(mc)
+        videoView.setVideoURI(Uri.fromFile(archivoTemporal))
+        videoView.setOnPreparedListener { it.start() }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        archivoTemporal?.delete()
+        archivoTemporal?.delete() // Seguridad: borramos el video descifrado
     }
 }
