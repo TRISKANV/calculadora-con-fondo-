@@ -2,6 +2,7 @@ package com.tuapp.calculadora
 
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
+import android.util.LruCache
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +21,9 @@ class VideoGaleriaAdapter(
 ) : RecyclerView.Adapter<VideoGaleriaAdapter.ViewHolder>() {
 
     private val cryptoManager = CryptoManager()
+    
+    // Caché en memoria para no descifrar la misma miniatura mil veces
+    private val memoryCache: LruCache<String, Bitmap> = LruCache(20)
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val ivThumbnail: ImageView = view.findViewById(R.id.ivThumbnail)
@@ -34,15 +38,23 @@ class VideoGaleriaAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val file = lista[position]
         
-        // Icono temporal mientras carga
+        // Limpiamos la imagen anterior para que no se vea mal al reciclar
+        holder.ivThumbnail.setImageBitmap(null)
         holder.ivThumbnail.setImageResource(android.R.drawable.ic_menu_gallery)
-        
-        // Cargamos la miniatura en segundo plano
-        CoroutineScope(Dispatchers.IO).launch {
-            val bitmap = obtenerMiniaturaCifrada(file, holder.itemView.context.cacheDir)
-            withContext(Dispatchers.Main) {
+
+        // Si ya está en caché, la ponemos de una
+        val bitmapEnCache = memoryCache.get(file.absolutePath)
+        if (bitmapEnCache != null) {
+            holder.ivThumbnail.setImageBitmap(bitmapEnCache)
+        } else {
+            // Si no, la buscamos en segundo plano
+            CoroutineScope(Dispatchers.IO).launch {
+                val bitmap = obtenerMiniaturaCifrada(file, holder.itemView.context.cacheDir)
                 if (bitmap != null) {
-                    holder.ivThumbnail.setImageBitmap(bitmap)
+                    memoryCache.put(file.absolutePath, bitmap)
+                    withContext(Dispatchers.Main) {
+                        holder.ivThumbnail.setImageBitmap(bitmap)
+                    }
                 }
             }
         }
@@ -51,27 +63,22 @@ class VideoGaleriaAdapter(
         holder.btnBorrar.setOnClickListener { onVideoDelete(position) }
     }
 
-    // Función mágica para sacar miniatura de un video cifrado
     private fun obtenerMiniaturaCifrada(fileCifrado: File, cacheDir: File): Bitmap? {
-        val tempFile = File(cacheDir, "thumb_${fileCifrado.name}.mp4")
+        val tempFile = File(cacheDir, "thumb_${System.currentTimeMillis()}.mp4")
         return try {
             val fis = FileInputStream(fileCifrado)
             val fos = FileOutputStream(tempFile)
-            
-            // Desciframos el video (solo lo necesario para la miniatura)
             cryptoManager.decryptToStream(fis, fos)
             
             val retriever = MediaMetadataRetriever()
             retriever.setDataSource(tempFile.absolutePath)
-            // Capturamos el frame en el segundo 1
             val bitmap = retriever.getFrameAtTime(1000000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
             retriever.release()
             bitmap
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         } finally {
-            tempFile.delete() 
+            if (tempFile.exists()) tempFile.delete()
         }
     }
 
