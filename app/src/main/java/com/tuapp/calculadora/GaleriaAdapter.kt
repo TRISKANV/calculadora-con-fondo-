@@ -22,14 +22,15 @@ class GaleriaAdapter(
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         // 
         val ivThumbnail: ImageView = view.findViewById(R.id.ivThumbnail)
+        
         // 
         val btnDelete: ImageButton = view.findViewById(R.id.btnBorrarFoto) 
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        //
+        // 
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_galeria, parent, false)
+            .inflate(R.layout.item_fotos, parent, false)
         return ViewHolder(view)
     }
 
@@ -40,6 +41,7 @@ class GaleriaAdapter(
             val inputStream = FileInputStream(archivoCifrado)
             val bytesDescifrados = cryptoManager.decrypt(inputStream)
             
+            // 
             val opciones = BitmapFactory.Options().apply {
                 inSampleSize = 4 
             }
