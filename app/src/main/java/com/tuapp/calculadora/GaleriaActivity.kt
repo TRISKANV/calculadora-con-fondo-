@@ -19,14 +19,12 @@ class GaleriaActivity : AppCompatActivity() {
     private lateinit var rvGaleria: RecyclerView
     private lateinit var adapter: GaleriaAdapter
     private var listaFotos = mutableListOf<File>()
-    
-    // 
     private val cryptoManager = CryptoManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // SEGURIDAD: Bloqueo de capturas y recents
+        // SEGURIDAD: Bloqueo de capturas y ocultar contenido en recientes
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -37,17 +35,16 @@ class GaleriaActivity : AppCompatActivity() {
         rvGaleria = findViewById(R.id.rvGaleria)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddFoto)
 
+        // Diseño de grilla (3 columnas)
         rvGaleria.layoutManager = GridLayoutManager(this, 3)
         
         cargarFotosDesdeBoveda()
 
+        // Configuración del selector de imágenes
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
-                if (uri != null) {
-                    //
-                    importarYCifrarFoto(uri)
-                }
+                uri?.let { importarYCifrarFoto(it) }
             }
         }
 
@@ -60,17 +57,23 @@ class GaleriaActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * BLINDAJE: Si el usuario presiona el botón Home o Recientes,
+     * la galería se cierra para evitar que alguien vea las miniaturas después.
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        finish()
+    }
+
     private fun cargarFotosDesdeBoveda() {
         val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
         if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
         
-        //
         val archivosEnCarpeta = carpetaPrivada.listFiles()
             ?.filter { it.isFile && it.name.endsWith(".enc") }
+            ?.sortedByDescending { it.lastModified() }
             ?.toMutableList() ?: mutableListOf()
-        
-        // arriba
-        archivosEnCarpeta.sortByDescending { it.lastModified() }
         
         listaFotos.clear()
         listaFotos.addAll(archivosEnCarpeta)
@@ -81,6 +84,9 @@ class GaleriaActivity : AppCompatActivity() {
             adapter = GaleriaAdapter(listaFotos, 
                 onFotoClick = { posicion ->
                     val intent = Intent(this, VisorActivity::class.java)
+                    // Pasamos la lista de rutas para que el visor pueda hacer swipe (si lo configuraste)
+                    val rutas = listaFotos.map { it.absolutePath }.toTypedArray()
+                    intent.putExtra("lista_fotos", rutas)
                     intent.putExtra("posicion", posicion)
                     startActivity(intent)
                 },
@@ -94,27 +100,25 @@ class GaleriaActivity : AppCompatActivity() {
 
     private fun importarYCifrarFoto(uriOriginal: Uri) {
         try {
-            //  cifrado
-            val nombreArchivo = "SECURE_${System.currentTimeMillis()}.enc"
+            val nombreArchivo = "IMG_${System.currentTimeMillis()}.enc"
             val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
             if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
             
             val archivoDestino = File(carpetaPrivada, nombreArchivo)
 
-            // PROCESO DE CIFRADO PROFESIONAL
+            // Usamos el CryptoManager para el proceso de cifrado
             contentResolver.openInputStream(uriOriginal)?.use { inputStream ->
                 FileOutputStream(archivoDestino).use { outputStream ->
-                    //  AES-256
                     cryptoManager.encrypt(inputStream, outputStream)
                 }
             }
 
-            Toast.makeText(this, "Foto cifrada y protegida ✅", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Foto protegida ✅", Toast.LENGTH_SHORT).show()
             cargarFotosDesdeBoveda()
             
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error crítico en cifrado", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error al cifrar la imagen", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -127,12 +131,13 @@ class GaleriaActivity : AppCompatActivity() {
                 listaFotos.removeAt(posicion)
                 adapter.notifyItemRemoved(posicion)
                 adapter.notifyItemRangeChanged(posicion, listaFotos.size)
-                Toast.makeText(this, "Eliminado permanentemente", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
         finish()
     }
 }
