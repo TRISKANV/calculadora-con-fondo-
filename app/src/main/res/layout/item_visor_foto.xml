@@ -5,7 +5,7 @@
     android:background="#000000">
 
     <com.github.chrisbanes.photoview.PhotoView
-        android:id="@+id/photoViewFull"
+        android:id="@+id/ivFotoFull"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </LinearLayout>
