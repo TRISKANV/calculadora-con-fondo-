@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // --- SEGURIDAD: Evita capturas y oculte el teclado en multitarea ---
+        // --- SEGURIDAD: Evita capturas y oculta el contenido en la lista de apps recientes ---
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -33,8 +33,7 @@ class MainActivity : AppCompatActivity() {
 
         val prefs = getSharedPreferences("DatosSecretos", Context.MODE_PRIVATE)
         
-        // Camuflaje inicial: Si no hay clave, no decimos "Crea contraseña" (es delatador)
-        // Decimos algo como "0" o simplemente nada.
+        // Camuflaje inicial
         if (prefs.getString("clave", null) == null) {
             tvExpresion.text = "" 
             Toast.makeText(this, "Bienvenido: Configura tu PIN y presiona =", Toast.LENGTH_LONG).show()
@@ -42,6 +41,15 @@ class MainActivity : AppCompatActivity() {
 
         val root = findViewById<ViewGroup>(R.id.rootLayout)
         configurarTodosLosBotones(root)
+    }
+
+    // --- MEJORA DE SEGURIDAD ---
+    // Cuando el usuario minimiza la app y vuelve, limpiamos la pantalla 
+    // para que no quede ningún número sospechoso a la vista.
+    override fun onResume() {
+        super.onResume()
+        tvExpresion.text = ""
+        tvResultado.text = "0"
     }
 
     private fun configurarTodosLosBotones(view: View) {
@@ -97,7 +105,6 @@ class MainActivity : AppCompatActivity() {
         val passGuardada = prefs.getString("clave", null)
 
         if (passGuardada == null) {
-            // Creación inicial
             if (entrada.length >= 4 && entrada.all { it.isDigit() }) {
                 prefs.edit().putString("clave", entrada).apply()
                 Toast.makeText(this, "✅ PIN CONFIGURADO", Toast.LENGTH_SHORT).show()
@@ -112,11 +119,10 @@ class MainActivity : AppCompatActivity() {
             tvResultado.text = "0" 
             
             val intent = Intent(this, BovedaActivity::class.java)
-            // FLAG_ACTIVITY_CLEAR_TOP evita que se queden actividades colgadas
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            // Esto asegura que la bóveda se abra como una tarea nueva y limpia
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
         } else {
-            // Es una operación matemática normal
             ejecutarCalculo(true)
             if (tvResultado.text != "Error") {
                 tvExpresion.text = tvResultado.text
