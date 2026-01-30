@@ -13,7 +13,6 @@ import android.view.WindowManager
 import android.webkit.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import java.io.File
 
 data class MotorBusqueda(val nombre: String, val url: String, val icono: Int)
 
@@ -61,15 +60,16 @@ class NavegadorActivity : AppCompatActivity() {
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            databaseEnabled = true // Necesario para algunos reproductores modernos
+            databaseEnabled = true
             allowFileAccess = true
             javaScriptCanOpenWindowsAutomatically = true
             mediaPlaybackRequiresUserGesture = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                return false // Permite que el WebView maneje los clics internamente
+                return false 
             }
         }
 
@@ -93,14 +93,13 @@ class NavegadorActivity : AppCompatActivity() {
             true
         }
 
-        // Carga inicial solo si es la primera vez (evita reseteo al girar)
         if (savedInstanceState == null) {
             webView.loadUrl("https://www.google.com")
         }
     }
 
     /**
-     * SEGURIDAD: Si el usuario minimiza el navegador, lo cerramos.
+     * SEGURIDAD: Si el usuario minimiza el navegador, lo cerramos para evitar ojos curiosos.
      */
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
@@ -116,11 +115,15 @@ class NavegadorActivity : AppCompatActivity() {
         webView.loadUrl(urlFinal)
     }
 
+    /**
+     * DESCARGA INTELIGENTE: Clasifica archivos automáticamente en Fotos o Videos.
+     */
     private fun gestionarDescarga(url: String, userAgent: String, contentDisposition: String?, mimetype: String?) {
         try {
             val request = DownloadManager.Request(Uri.parse(url))
             var fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
             
+            // Corregir extensión si es genérica
             if (fileName.endsWith(".bin") && mimetype != null) {
                 val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimetype)
                 if (extension != null) {
@@ -128,21 +131,34 @@ class NavegadorActivity : AppCompatActivity() {
                 }
             }
 
+            // --- CLASIFICACIÓN POR CARPETAS ---
+            val extension = MimeTypeMap.getFileExtensionFromUrl(url).lowercase()
+            val subCarpeta = when {
+                mimetype?.startsWith("image/") == true || listOf("jpg", "jpeg", "png", "webp", "gif").contains(extension) -> {
+                    "FotosSecretas"
+                }
+                mimetype?.startsWith("video/") == true || listOf("mp4", "mkv", "mov", "avi", "3gp").contains(extension) -> {
+                    "VideosSecretos"
+                }
+                else -> Environment.DIRECTORY_DOWNLOADS
+            }
+
             request.setMimeType(mimetype)
             val cookies = CookieManager.getInstance().getCookie(url)
             request.addRequestHeader("cookie", cookies)
             request.addRequestHeader("User-Agent", userAgent)
+
             request.setTitle(fileName)
-            request.setDescription("Descargando de forma privada...")
+            request.setDescription("Guardando en $subCarpeta...")
             
-            // Guardamos en la carpeta privada de la app para que la galería pública no lo vea
-            request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
+            // Guardamos en la carpeta privada clasificada
+            request.setDestinationInExternalFilesDir(this, subCarpeta, fileName)
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
             val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
 
-            Toast.makeText(this, "Descarga iniciada", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Descarga iniciada: $subCarpeta", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -153,10 +169,9 @@ class NavegadorActivity : AppCompatActivity() {
         val result = webView.hitTestResult
         val tipo = result.type
 
-        // Tipos 5 (imagen), 8 (video/media), 9 (link con media)
         if (tipo == WebView.HitTestResult.IMAGE_TYPE || tipo == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
             menu.setHeaderTitle("Imagen Privada")
-            menu.add(0, 1, 0, "Guardar en la Bóveda").setOnMenuItemClickListener {
+            menu.add(0, 1, 0, "Guardar en Fotos Secretas").setOnMenuItemClickListener {
                 result.extra?.let { gestionarDescarga(it, webView.settings.userAgentString, null, null) }
                 true
             }
@@ -164,7 +179,6 @@ class NavegadorActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Limpieza profunda al salir
         webView.stopLoading()
         webView.clearCache(true)
         webView.clearHistory()
