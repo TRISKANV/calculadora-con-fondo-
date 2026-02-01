@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Calculadora Gaga</string>
+
+    <string name="servicio_descripcion">Este servicio protege tus aplicaciones privadas mediante un bloqueo de PIN vinculado a la calculadora.</string>
+    
+    <string name="pin_incorrecto">PIN Incorrecto</string>
+    <string name="ingresa_pin">Ingresá tu PIN</string>
+</resources>
