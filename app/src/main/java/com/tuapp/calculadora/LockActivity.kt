@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat
 class LockActivity : AppCompatActivity() {
 
     private var pinIngresado = ""
-    // Aquí podrías recuperar el PIN real de SharedPreferences, por ahora usemos "1234"
+    //"
     private val PIN_CORRECTO = "1234" 
     
     private lateinit var puntos: List<View>
@@ -20,11 +20,11 @@ class LockActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // SEGURIDAD: Bloquear capturas y ocultar de recientes
+        // 
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_lock)
 
-        // Referenciamos los 4 círculos del XML
+        // 
         puntos = listOf(
             findViewById(R.id.dot1), 
             findViewById(R.id.dot2),
@@ -33,7 +33,7 @@ class LockActivity : AppCompatActivity() {
         )
     }
 
-    // Vincula este método a los botones del 0 al 9 en tu XML usando android:onClick="onNumeroClick"
+    // "
     fun onNumeroClick(view: View) {
         if (pinIngresado.length < 4) {
             val boton = view as Button
@@ -60,10 +60,10 @@ class LockActivity : AppCompatActivity() {
 
     private fun verificarPin() {
         if (pinIngresado == PIN_CORRECTO) {
-            //
+            // 
             finish() 
         } else {
-            // 
+            // Error: Limpiamos y avisamos
             Toast.makeText(this, "PIN Incorrecto", Toast.LENGTH_SHORT).show()
             pinIngresado = ""
             actualizarInterfazPuntos()
