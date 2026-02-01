@@ -40,9 +40,9 @@ class BovedaActivity : AppCompatActivity() {
                 R.id.nav_notas -> startActivity(Intent(this, NotasActivity::class.java))
                 R.id.nav_descargas -> startActivity(Intent(this, DescargasActivity::class.java))
                 
-                // MODO PRUEBA: Ajustes ahora abre la pantalla de bloqueo tipo iPhone
+                // ACTUALIZADO: Ahora Ajustes abre la lista de apps para proteger
                 R.id.nav_ajustes -> {
-                    val intent = Intent(this, LockActivity::class.java)
+                    val intent = Intent(this, SeleccionarAppsActivity::class.java)
                     startActivity(intent)
                 }
             }
