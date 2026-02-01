@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E6000000"> <ImageView
+    android:background="#E6000000">
+
+    <ImageView
         android:id="@+id/ivLockIcon"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginTop="60dp"
         android:src="@android:drawable/ic_lock_lock"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_start_toStartOf="parent"
-        app:layout_end_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:tint="@android:color/white" />
 
     <TextView
@@ -23,8 +26,8 @@
         android:textSize="18sp"
         android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/ivLockIcon"
-        app:layout_start_toStartOf="parent"
-        app:layout_end_toEndOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
         android:id="@+id/pinIndicatorLayout"
@@ -33,8 +36,9 @@
         android:orientation="horizontal"
         android:layout_marginTop="24dp"
         app:layout_constraintTop_toBottomOf="@id/tvLockTitle"
-        app:layout_start_toStartOf="parent"
-        app:layout_end_toEndOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        
         <View android:id="@+id/dot1" android:layout_width="14dp" android:layout_height="14dp" android:layout_margin="12dp" android:background="@drawable/pin_dot"/>
         <View android:id="@+id/dot2" android:layout_width="14dp" android:layout_height="14dp" android:layout_margin="12dp" android:background="@drawable/pin_dot"/>
         <View android:id="@+id/dot3" android:layout_width="14dp" android:layout_height="14dp" android:layout_margin="12dp" android:background="@drawable/pin_dot"/>
@@ -48,8 +52,8 @@
         android:rowCount="4"
         android:layout_marginTop="40dp"
         app:layout_constraintTop_toBottomOf="@id/pinIndicatorLayout"
-        app:layout_start_toStartOf="parent"
-        app:layout_end_toEndOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <Button style="@style/PinButtonStyle" android:text="1" android:onClick="onNumeroClick"/>
         <Button style="@style/PinButtonStyle" android:text="2" android:onClick="onNumeroClick"/>
