@@ -35,7 +35,7 @@ class BovedaActivity : AppCompatActivity() {
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_fotos -> startActivity(Intent(this, GaleriaActivity::class.java))
-                R.id.nav_videos -> startActivity(Intent(this, VideoGaleriaActivity::class.java))
+                val intent = Intent(this, ReproductorActivity::class.java)
                 R.id.nav_internet -> startActivity(Intent(this, NavegadorActivity::class.java))
                 R.id.nav_notas -> startActivity(Intent(this, NotasActivity::class.java))
                 R.id.nav_descargas -> startActivity(Intent(this, DescargasActivity::class.java))
