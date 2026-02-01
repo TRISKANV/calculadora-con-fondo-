@@ -19,8 +19,14 @@ android {
 
     buildTypes {
         release {
-            // Activa la optimización para que el código sea más difícil de detectar como "sospechoso"
-            minifyEnabled false
+            // Activamos la protección y limpieza de recursos
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            // También lo activamos en debug para engañar a Play Protect durante las pruebas
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
