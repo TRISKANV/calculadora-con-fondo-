@@ -5,22 +5,18 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" tools:ignore="ScopedStorage" />
+    
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
-    <application
+    <uses-permission android:name="android.permission.VIBRATE" /> <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" /> <application
         android:allowBackup="true"
         android:icon="@drawable/ic_calculadora_2"
         android:roundIcon="@drawable/ic_calculadora_2"
         android:label="Calculadora Cientifica"
-        android:theme="@style/Theme.AppCompat.NoActionBar">
-
-        <activity
+        android:theme="@style/Theme.CalculadoraGaga"> <activity
             android:name=".MainActivity"
             android:exported="true" />
 
@@ -50,59 +46,30 @@
             </intent-filter>
         </activity-alias>
 
-        <activity-alias
-            android:name=".AliasClassic"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/ic_calculadora_2"
-            android:label="Calculadora Cientifica"
-            android:targetActivity=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity android:name=".BovedaActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
-        
-        <activity 
-            android:name=".NavegadorActivity" 
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
-
+        <activity android:name=".BovedaActivity" android:exported="false" />
+        <activity android:name=".NavegadorActivity" android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
         <activity android:name=".GaleriaActivity" android:exported="false" />
         <activity android:name=".VideoActivity" android:exported="false" />
         <activity android:name=".VisorActivity" android:exported="false" />
-        
-        <activity 
-            android:name=".ReproductorActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
-
-        <activity android:name=".DescargasActivity" android:exported="false" android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity android:name=".ReproductorActivity" android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+        <activity android:name=".DescargasActivity" android:exported="false" />
         <activity android:name=".VideoGaleriaActivity" android:screenOrientation="portrait" />
-        <activity android:name=".SeleccionarAppsActivity" android:theme="@style/Theme.AppCompat.NoActionBar" />
-        
-        <activity
-            android:name=".NotasActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity 
-            android:name=".AjustesActivity" 
-            android:exported="false" 
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity android:name=".SeleccionarAppsActivity" android:exported="false" />
+        <activity android:name=".NotasActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".AjustesActivity" android:exported="false" />
 
         <activity 
             android:name=".LockActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.CalculadoraGaga"
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
+            android:noHistory="true"
             android:exported="false" />
 
         <service
             android:name=".AppLockService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:label="Servicio de Bloqueo Calculadora"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
