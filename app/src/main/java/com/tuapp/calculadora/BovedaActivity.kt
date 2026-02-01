@@ -39,7 +39,12 @@ class BovedaActivity : AppCompatActivity() {
                 R.id.nav_internet -> startActivity(Intent(this, NavegadorActivity::class.java))
                 R.id.nav_notas -> startActivity(Intent(this, NotasActivity::class.java))
                 R.id.nav_descargas -> startActivity(Intent(this, DescargasActivity::class.java))
-                R.id.nav_ajustes -> startActivity(Intent(this, AjustesActivity::class.java))
+                
+                // MODO PRUEBA: Ajustes ahora abre la pantalla de bloqueo tipo iPhone
+                R.id.nav_ajustes -> {
+                    val intent = Intent(this, LockActivity::class.java)
+                    startActivity(intent)
+                }
             }
             drawerLayout.closeDrawer(GravityCompat.END)
             true
