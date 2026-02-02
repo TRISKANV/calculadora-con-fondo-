@@ -1,9 +1,9 @@
-name: Android Build and Sign
+name: Calculadora Treska Final Build
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Esto te permite darle al botón "Play" manual
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -23,15 +23,13 @@ jobs:
         gradle-version: '8.2'
 
     - name: Build Release APK
-      run: |
-        gradle assembleRelease
+      run: gradle assembleRelease
 
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       id: sign_app
       with:
         releaseDirectory: app/build/outputs/apk/release
-        # Usamos este formato para que el Secreto se lea limpio
         signingKeyBase64: ${{ secrets.KEYSTORE_FILE }}
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
