@@ -23,16 +23,15 @@ jobs:
 
     - name: Build Release APK
       run: |
-        # Cambiado a minúsculas como está en tu repo
-        cd calculadora
+        # Ejecutamos directamente en la raíz
         gradle assembleRelease
 
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       id: sign_app
       with:
-        # Ruta corregida a minúsculas
-        releaseDirectory: calculadora/app/build/outputs/apk/release
+        # Buscamos el APK en la ruta estándar de la raíz
+        releaseDirectory: app/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.KEYSTORE_FILE }}
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
