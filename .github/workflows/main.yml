@@ -16,7 +16,6 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # AQUÍ ESTÁ EL CAMBIO CLAVE: Forzamos Gradle 8.2 para que no de error de compatibilidad
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
@@ -24,21 +23,17 @@ jobs:
 
     - name: Build Release APK
       run: |
-        # Buscamos la raíz del proyecto
-        PROJECT_ROOT=$(find . -maxdepth 3 -name build.gradle | grep "app/build.gradle" | xargs dirname | xargs dirname)
-        if [ -z "$PROJECT_ROOT" ]; then PROJECT_ROOT="."; fi
-        
-        echo "Usando carpeta: $PROJECT_ROOT"
-        cd "$PROJECT_ROOT"
-        
-        # Ejecutamos el compilado
+        # Entramos directamente a tu carpeta del proyecto
+        cd Calculadora
+        # Ejecutamos el compilado usando gradle del sistema
         gradle assembleRelease
 
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       id: sign_app
       with:
-        releaseDirectory: .
+        # Ruta corregida: Gradle deja el APK en app/build/... dentro de Calculadora
+        releaseDirectory: Calculadora/app/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.KEYSTORE_FILE }}
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -48,4 +43,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: calculadora-treska-final
-        path: "**/*-release-signed.apk"
+        # Usamos la salida directa del firmador para no fallar
+        path: ${{steps.sign_app.outputs.signedReleaseFile}}
