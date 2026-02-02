@@ -1,4 +1,4 @@
-name: APK 2026 Blindado
+name: APK 2026 Final
 on:
   workflow_dispatch:
 
@@ -8,21 +8,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # Usamos Java 17 que es el estándar actual
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Instalamos Gradle 8.0 (Versión muy estable)
+      # CORRECCIÓN: Subimos a la versión 8.2 como pide el error
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.0'
+          gradle-version: '8.2'
 
-      # EL TRUCO: "-x lint" ignora las advertencias y fuerza la creación del APK
-      # "assembleRelease" crea la app sin firmar primero
       - name: Build with Gradle
         run: gradle assembleRelease -x lint --stacktrace
 
