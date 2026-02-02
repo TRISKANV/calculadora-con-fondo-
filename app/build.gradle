@@ -1,38 +1,28 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt' // Necesario para que Glide funcione bien con Kotlin
+    id 'kotlin-kapt' 
 }
 
 android {
-    // El namespace para tu código fuente (R.java)
     namespace 'com.tuapp.calculadora'
-    
-    // Esta línea es la que te faltaba o daba error antes
     compileSdk 34
 
     defaultConfig {
-        // Tu ID "Stealth" para que parezca un servicio del sistema
         applicationId "com.android.system.service.core" 
         minSdk 24
         targetSdk 34
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            // Configuración para el APK final (El que compartirás)
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            // Desactivamos esto en Debug para asegurar que GitHub no falle al compilar
-            minifyEnabled false
+            // 
+            minifyEnabled false 
             shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     
@@ -47,28 +37,22 @@ android {
 }
 
 dependencies {
-    // Motor de la calculadora
-    implementation 'net.objecthunter:exp4j:0.4.8'
-    
-    // Visor de fotos con zoom
-    implementation 'com.github.chrisbanes:PhotoView:2.3.0'
-    
-    // Componentes base de Android
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     
-    // Utilidades (JSON y Cifrado)
+    // Motor calculadora y visor
+    implementation 'net.objecthunter:exp4j:0.4.8'
+    implementation 'com.github.chrisbanes:PhotoView:2.3.0'
+    
+    // Glide corregido
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    kapt 'com.github.bumptech.glide:compiler:4.16.0'
+
+    // Seguridad y JSON
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation "androidx.security:security-crypto:1.1.0-alpha06"
 
-    // Gestión de Imágenes (Glide) - Corregido para Kotlin
-    implementation 'com.github.bumptech.glide:glide:4.16.0'
-    kapt 'com.github.bumptech.glide:compiler:4.16.0' // IMPORTANTE: Usamos kapt en lugar de annotationProcessor
-
-    // Testing
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
