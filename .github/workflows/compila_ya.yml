@@ -14,15 +14,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # CORRECCIÓN: Subimos a la versión 8.2 como pide el error
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.2'
 
+      # Build del APK
       - name: Build with Gradle
-        run: gradle assembleRelease -x lint --stacktrace
+        run: gradle assembleRelease -x lint
 
+      # ESTE PASO NUEVO ARREGLA EL ERROR DEL ZIPALIGN
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Firmado del APK (con build-tools actualizado)
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
@@ -32,6 +37,8 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          # Forzamos una versión de build-tools que sí existe
+          buildToolsVersion: "34.0.0" 
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
