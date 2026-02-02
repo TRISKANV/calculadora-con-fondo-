@@ -1,4 +1,4 @@
-name: Compilacion Senior Final
+name: APK 2026
 on:
   workflow_dispatch: # ESTO ES EL BOTON MANUAL
 
