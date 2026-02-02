@@ -17,19 +17,22 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    # E
     - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      run: chmod +x Calculadora/gradlew
 
     # 
     - name: Build with Gradle
-      run: ./gradlew assembleRelease
+      run: |
+        cd Calculadora
+        ./gradlew assembleRelease
 
     # 
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       id: sign_app
       with:
-        releaseDirectory: app/build/outputs/apk/release
+        releaseDirectory: Calculadora/app/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.KEYSTORE_FILE }}
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
