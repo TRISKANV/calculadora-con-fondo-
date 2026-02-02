@@ -23,17 +23,16 @@ jobs:
 
     - name: Build Release APK
       run: |
-        # Entramos directamente a tu carpeta del proyecto
-        cd Calculadora
-        # Ejecutamos el compilado usando gradle del sistema
+        # Cambiado a minúsculas como está en tu repo
+        cd calculadora
         gradle assembleRelease
 
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       id: sign_app
       with:
-        # Ruta corregida: Gradle deja el APK en app/build/... dentro de Calculadora
-        releaseDirectory: Calculadora/app/build/outputs/apk/release
+        # Ruta corregida a minúsculas
+        releaseDirectory: calculadora/app/build/outputs/apk/release
         signingKeyBase64: ${{ secrets.KEYSTORE_FILE }}
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -43,5 +42,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: calculadora-treska-final
-        # Usamos la salida directa del firmador para no fallar
         path: ${{steps.sign_app.outputs.signedReleaseFile}}
