@@ -10,28 +10,43 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: set up JDK 17
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # Como no tienes el archivo gradlew en tu repo, instalamos Gradle manualmente
+    # ESTE PASO ES CLAVE: Instala Gradle del sistema (por si falta tu gradlew)
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
 
-    # Compilamos usando el Gradle del sistema, no el tuyo
-    - name: Build with Gradle
+    # PASO DE DIAGNÓSTICO: Esto nos mostrará en el log qué carpetas tienes realmente
+    - name: List files (Debug)
+      run: ls -R
+
+    # PASO INTELIGENTE: Busca dónde está tu proyecto y compila ahí
+    - name: Build Release APK
       run: |
-        cd Calculadora
+        # Buscamos el archivo settings.gradle o build.gradle para saber la raíz
+        PROJECT_ROOT=$(find . -maxdepth 3 -name settings.gradle -o -name build.gradle | head -n 1 | xargs dirname)
+        
+        if [ -z "$PROJECT_ROOT" ]; then
+          echo "ERROR: No encontré ningún archivo build.gradle. Revisa que hayas subido los archivos."
+          exit 1
+        fi
+
+        echo "✅ Proyecto encontrado en la carpeta: $PROJECT_ROOT"
+        cd "$PROJECT_ROOT"
+        
+        # Usamos 'gradle' del sistema porque el tuyo (gradlew) parece no estar
         gradle assembleRelease
 
-    # Firmamos el APK (buscándolo donde Gradle lo deja por defecto)
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       id: sign_app
       with:
-        releaseDirectory: Calculadora/app/build/outputs/apk/release
+        # Aquí usamos un truco (*) para que busque el APK donde sea que haya caído
+        releaseDirectory: .
         signingKeyBase64: ${{ secrets.KEYSTORE_FILE }}
         alias: ${{ secrets.KEY_ALIAS }}
         keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -41,4 +56,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: calculadora-treska-final
-        path: ${{steps.sign_app.outputs.signedReleaseFile}}
+        # Busca cualquier archivo .apk que sea release y signed
+        path: "**/*-release-signed.apk"
