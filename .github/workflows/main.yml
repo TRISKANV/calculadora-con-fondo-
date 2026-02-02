@@ -1,9 +1,9 @@
-name: Calculadora Treska Final Build
+name: Android Build Final
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,13 +17,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    # 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: '8.2'
 
-    - name: Build Release APK
-      run: gradle assembleRelease
+    - name: Build with Gradle
+      run: gradle assembleRelease --stacktrace
 
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
@@ -37,8 +38,8 @@ jobs:
       env:
         BUILD_TOOLS_VERSION: "34.0.0"
 
-    - name: Upload Signed APK
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: calculadora-treska-final
+        name: calculadora-firmada
         path: ${{steps.sign_app.outputs.signedReleaseFile}}
