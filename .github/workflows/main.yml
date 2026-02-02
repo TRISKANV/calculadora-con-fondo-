@@ -1,29 +1,43 @@
-name: Android Build Test
+name: Android Build and Sign
+
 on:
   push:
     branches: [ "main" ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
     - name: set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: gradle
 
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        gradle-version: 8.5
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
+    # 
     - name: Build with Gradle
-      run: gradle assembleDebug
+      run: ./gradlew assembleRelease
 
-    # ESTO SUBE EL APK PARA QUE LO DESCARGUES
-    - name: Upload APK
+    # 
+    - name: Sign APK
+      uses: r0adkll/sign-android-release@v1
+      id: sign_app
+      with:
+        releaseDirectory: app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.KEYSTORE_FILE }}
+        alias: ${{ secrets.KEY_ALIAS }}
+        keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+        keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+    # 
+    - name: Upload Signed APK
       uses: actions/upload-artifact@v4
       with:
-        name: calculadora-secreta
-        path: app/build/outputs/apk/debug/app-debug.apk
+        name: calculadora-treska-final
+        path: ${{steps.sign_app.outputs.signedReleaseFile}}
