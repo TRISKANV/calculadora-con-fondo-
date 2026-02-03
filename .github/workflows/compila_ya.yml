@@ -1,4 +1,4 @@
-name: APK 2026 Final
+name: APK 2026 REBUILD
 on:
   workflow_dispatch:
 
@@ -19,11 +19,15 @@ jobs:
         with:
           gradle-version: '8.2'
 
+      # 
       - name: Build with Gradle
-        run: gradle assembleRelease -x lint
+        run: |
+          chmod +x ./gradlew || true
+          gradle assembleRelease -x lint --stacktrace
 
-      # 
-      # 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Fix Android Build Tools Path
         run: |
           sudo mkdir -p /usr/local/lib/android/sdk/build-tools/29.0.3
@@ -43,5 +47,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AppFinal
+          name: AppFinal-Triskanv
           path: ${{steps.sign_app.outputs.signedReleaseFile}}
