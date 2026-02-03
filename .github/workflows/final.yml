@@ -1,4 +1,4 @@
-name: RECONSTRUCCION_TOTAL
+name: APK 2026 Final
 on:
   workflow_dispatch:
 
@@ -7,20 +7,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.2'
-      - name: Build
+
+      - name: Build with Gradle
+        run: gradle assembleRelease -x lint
+
+      # 
+      # 
+      - name: Fix Android Build Tools Path
         run: |
-          chmod +x ./gradlew || true
-          gradle assembleRelease -x lint
-      - name: Sign
+          sudo mkdir -p /usr/local/lib/android/sdk/build-tools/29.0.3
+          sudo ln -s /usr/local/lib/android/sdk/build-tools/34.0.0/zipalign /usr/local/lib/android/sdk/build-tools/29.0.3/zipalign
+          sudo ln -s /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner /usr/local/lib/android/sdk/build-tools/29.0.3/apksigner
+
+      - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
         with:
@@ -29,8 +39,9 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-      - name: Upload
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Calculadora_Final
+          name: AppFinal
           path: ${{steps.sign_app.outputs.signedReleaseFile}}
