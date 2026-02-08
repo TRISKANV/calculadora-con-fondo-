@@ -1,4 +1,4 @@
-package com.tuapp.calculadora
+package com.triskanv.calculadora // Asegúrate de que este sea tu package real
 
 import android.app.DownloadManager
 import android.content.Context
@@ -25,7 +25,7 @@ class NavegadorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // SEGURIDAD: Bloquear capturas y ocultar de recientes
+        // SEGURIDAD: Bloquear capturas
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -56,7 +56,7 @@ class NavegadorActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // --- CONFIGURACIÓN AVANZADA DEL WEBVIEW ---
+        // --- CONFIGURACIÓN DEL WEBVIEW ---
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -65,6 +65,7 @@ class NavegadorActivity : AppCompatActivity() {
             javaScriptCanOpenWindowsAutomatically = true
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            userAgentString = "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36"
         }
 
         webView.webViewClient = object : WebViewClient() {
@@ -99,11 +100,11 @@ class NavegadorActivity : AppCompatActivity() {
     }
 
     /**
-     * SEGURIDAD: Si el usuario minimiza el navegador, lo cerramos para evitar ojos curiosos.
+     * COMENTADO: Evita que la app se cierre al saltar diálogos de sistema o permisos.
      */
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        finish()
+        // finish() // Comentado para debugging de crashes
     }
 
     private fun cargarUrl(url: String) {
@@ -115,50 +116,42 @@ class NavegadorActivity : AppCompatActivity() {
         webView.loadUrl(urlFinal)
     }
 
-    /**
-     * DESCARGA INTELIGENTE: Clasifica archivos automáticamente en Fotos o Videos.
-     */
     private fun gestionarDescarga(url: String, userAgent: String, contentDisposition: String?, mimetype: String?) {
         try {
-            val request = DownloadManager.Request(Uri.parse(url))
-            var fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
-            
-            // Corregir extensión si es genérica
-            if (fileName.endsWith(".bin") && mimetype != null) {
-                val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimetype)
-                if (extension != null) {
-                    fileName = fileName.substringBeforeLast(".") + "." + extension
-                }
+            // Refinar MimeType para evitar .bin
+            var mimeEfectivo = mimetype
+            if (url.contains(".jpg", true) || url.contains(".jpeg", true)) mimeEfectivo = "image/jpeg"
+            if (url.contains(".png", true)) mimeEfectivo = "image/png"
+            if (url.contains(".mp4", true)) mimeEfectivo = "video/mp4"
+
+            var fileName = URLUtil.guessFileName(url, contentDisposition, mimeEfectivo)
+
+            if (fileName.endsWith(".bin") || !fileName.contains(".")) {
+                val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeEfectivo)
+                fileName = "file_${System.currentTimeMillis()}.${extension ?: "jpg"}"
             }
 
-            // --- CLASIFICACIÓN POR CARPETAS ---
-            val extension = MimeTypeMap.getFileExtensionFromUrl(url).lowercase()
+            // Clasificación
+            val extensionUrl = MimeTypeMap.getFileExtensionFromUrl(url).lowercase()
             val subCarpeta = when {
-                mimetype?.startsWith("image/") == true || listOf("jpg", "jpeg", "png", "webp", "gif").contains(extension) -> {
-                    "FotosSecretas"
-                }
-                mimetype?.startsWith("video/") == true || listOf("mp4", "mkv", "mov", "avi", "3gp").contains(extension) -> {
-                    "VideosSecretos"
-                }
+                mimeEfectivo?.startsWith("image/") == true || listOf("jpg", "jpeg", "png", "webp").contains(extensionUrl) -> "FotosSecretas"
+                mimeEfectivo?.startsWith("video/") == true || listOf("mp4", "mkv", "mov", "avi").contains(extensionUrl) -> "VideosSecretos"
                 else -> Environment.DIRECTORY_DOWNLOADS
             }
 
-            request.setMimeType(mimetype)
-            val cookies = CookieManager.getInstance().getCookie(url)
-            request.addRequestHeader("cookie", cookies)
-            request.addRequestHeader("User-Agent", userAgent)
-
-            request.setTitle(fileName)
-            request.setDescription("Guardando en $subCarpeta...")
-            
-            // Guardamos en la carpeta privada clasificada
-            request.setDestinationInExternalFilesDir(this, subCarpeta, fileName)
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            val request = DownloadManager.Request(Uri.parse(url)).apply {
+                setMimeType(mimeEfectivo)
+                addRequestHeader("cookie", CookieManager.getInstance().getCookie(url))
+                addRequestHeader("User-Agent", userAgent)
+                setTitle(fileName)
+                setDescription("Guardando en $subCarpeta")
+                setDestinationInExternalFilesDir(this@NavegadorActivity, subCarpeta, fileName)
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            }
 
             val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(request)
-
-            Toast.makeText(this, "Descarga iniciada: $subCarpeta", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Descarga iniciada", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -167,11 +160,9 @@ class NavegadorActivity : AppCompatActivity() {
     override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
         super.onCreateContextMenu(menu, v, menuInfo)
         val result = webView.hitTestResult
-        val tipo = result.type
-
-        if (tipo == WebView.HitTestResult.IMAGE_TYPE || tipo == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+        if (result.type == WebView.HitTestResult.IMAGE_TYPE || result.type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
             menu.setHeaderTitle("Imagen Privada")
-            menu.add(0, 1, 0, "Guardar en Fotos Secretas").setOnMenuItemClickListener {
+            menu.add(0, 1, 0, "Guardar en Bóveda").setOnMenuItemClickListener {
                 result.extra?.let { gestionarDescarga(it, webView.settings.userAgentString, null, null) }
                 true
             }
@@ -179,43 +170,29 @@ class NavegadorActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        webView.stopLoading()
-        webView.clearCache(true)
-        webView.clearHistory()
-        webView.clearFormData()
-        CookieManager.getInstance().removeAllCookies(null)
-        CookieManager.getInstance().flush()
+        webView.apply {
+            stopLoading()
+            clearCache(true)
+            clearHistory()
+            removeAllViews()
+            destroy()
+        }
         super.onDestroy()
     }
 
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            finish() 
-        }
+        if (webView.canGoBack()) webView.goBack() else finish()
     }
 
     inner class MotorAdapter(context: Context, private val motores: List<MotorBusqueda>) :
         ArrayAdapter<MotorBusqueda>(context, 0, motores) {
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            return crearFila(position, convertView, parent)
-        }
-
-        override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
-            return crearFila(position, convertView, parent)
-        }
-
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View = crearFila(position, convertView, parent)
+        override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View = crearFila(position, convertView, parent)
         private fun crearFila(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_motor_busqueda, parent, false)
             val motor = getItem(position)
-            val icono = view.findViewById<ImageView>(R.id.ivMotorIcono)
-            val nombre = view.findViewById<TextView>(R.id.tvMotorNombre)
-            motor?.let {
-                icono.setImageResource(it.icono)
-                nombre.text = it.nombre
-            }
+            view.findViewById<ImageView>(R.id.ivMotorIcono).setImageResource(motor?.icono ?: 0)
+            view.findViewById<TextView>(R.id.tvMotorNombre).text = motor?.nombre
             return view
         }
     }
