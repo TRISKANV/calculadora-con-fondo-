@@ -1,4 +1,4 @@
-package com.tuapp.calculadora
+package com.triskanv.calculadora
 
 import android.net.Uri
 import android.os.Bundle
@@ -21,12 +21,12 @@ class ReproductorActivity : AppCompatActivity() {
     private var listaRutas: Array<String>? = null
     private var posicionActual: Int = 0
     private var archivoTemporal: File? = null
+    private var esArchivoTemporal: Boolean = false
     private val cryptoManager = CryptoManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // SEGURIDAD: Bloqueo de capturas y ocultar en multitarea
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -52,27 +52,42 @@ class ReproductorActivity : AppCompatActivity() {
         btnAnterior.setOnClickListener { reproducirAnterior() }
         
         videoView.setOnCompletionListener { reproducirSiguiente() }
+
+        // Manejo de errores en el VideoView
+        videoView.setOnErrorListener { _, _, _ ->
+            Toast.makeText(this, "Error al reproducir este video", Toast.LENGTH_SHORT).show()
+            true
+        }
     }
 
-    /**
-     * BLINDAJE DE SEGURIDAD:
-     * Si el usuario sale de la app, cerramos el reproductor.
-     * Esto dispara onDestroy() y borra el video descifrado de la caché.
-     */
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        finish()
+        // finish() // Comentado para evitar cierres molestos
     }
 
     private fun cargarYReproducir() {
         val rutas = listaRutas
         if (rutas != null && posicionActual in rutas.indices) {
-            val pathCifrado = rutas[posicionActual]
-            descifrarVideo(pathCifrado)
+            val path = rutas[posicionActual]
+            val archivo = File(path)
+
+            if (archivo.name.lowercase().endsWith(".enc")) {
+                descifrarVideo(path)
+            } else {
+                reproducirDirecto(archivo)
+            }
         } else {
             Toast.makeText(this, "Fin de la lista", Toast.LENGTH_SHORT).show()
             finish()
         }
+    }
+
+    private fun reproducirDirecto(archivo: File) {
+        borrarArchivoTemporal()
+        esArchivoTemporal = false
+        videoView.stopPlayback()
+        videoView.setVideoURI(Uri.fromFile(archivo))
+        videoView.start()
     }
 
     private fun descifrarVideo(pathCifrado: String) {
@@ -81,29 +96,29 @@ class ReproductorActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Limpieza inmediata del temporal anterior antes de crear uno nuevo
                 borrarArchivoTemporal()
                 
                 val archivoCifrado = File(pathCifrado)
-                archivoTemporal = File(cacheDir, "vault_stream_${System.currentTimeMillis()}.mp4")
+                val tempFile = File(cacheDir, "v_stream_${System.currentTimeMillis()}.mp4")
                 
                 val fis = FileInputStream(archivoCifrado)
-                val fos = FileOutputStream(archivoTemporal)
+                val fos = FileOutputStream(tempFile)
                 
-                // DESCIFRADO AES
                 cryptoManager.decryptToStream(fis, fos)
                 
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
-                    if (archivoTemporal?.exists() == true) {
-                        videoView.setVideoURI(Uri.fromFile(archivoTemporal))
+                    if (tempFile.exists()) {
+                        archivoTemporal = tempFile
+                        esArchivoTemporal = true
+                        videoView.setVideoURI(Uri.fromFile(tempFile))
                         videoView.start()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
-                    Toast.makeText(this@ReproductorActivity, "Error de seguridad", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReproductorActivity, "Error de descifrado", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -129,11 +144,14 @@ class ReproductorActivity : AppCompatActivity() {
     }
 
     private fun borrarArchivoTemporal() {
-        try {
-            archivoTemporal?.let {
-                if (it.exists()) it.delete()
-            }
-        } catch (e: Exception) { e.printStackTrace() }
+        if (esArchivoTemporal) {
+            try {
+                archivoTemporal?.let {
+                    if (it.exists()) it.delete()
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+            esArchivoTemporal = false
+        }
     }
 
     override fun onDestroy() {
