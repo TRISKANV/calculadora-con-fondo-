@@ -1,4 +1,4 @@
-package com.tuapp.calculadora
+package com.triskanv.calculadora
 
 import android.app.Activity
 import android.content.Intent
@@ -24,7 +24,6 @@ class GaleriaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // SEGURIDAD: Bloqueo de capturas y ocultar contenido en recientes
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -35,12 +34,10 @@ class GaleriaActivity : AppCompatActivity() {
         rvGaleria = findViewById(R.id.rvGaleria)
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAddFoto)
 
-        // Diseño de grilla (3 columnas)
         rvGaleria.layoutManager = GridLayoutManager(this, 3)
         
         cargarFotosDesdeBoveda()
 
-        // Configuración del selector de imágenes
         val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
@@ -58,20 +55,25 @@ class GaleriaActivity : AppCompatActivity() {
     }
 
     /**
-     * BLINDAJE: Si el usuario presiona el botón Home o Recientes,
-     * la galería se cierra para evitar que alguien vea las miniaturas después.
+     * 
      */
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        finish()
+        // finish() 
     }
 
     private fun cargarFotosDesdeBoveda() {
+        // 
         val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
         if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
         
+        // 
+        val extensionesPermitidas = listOf("enc", "jpg", "jpeg", "png", "webp")
+        
         val archivosEnCarpeta = carpetaPrivada.listFiles()
-            ?.filter { it.isFile && it.name.endsWith(".enc") }
+            ?.filter { archivo -> 
+                archivo.isFile && extensionesPermitidas.any { ext -> archivo.name.lowercase().endsWith(ext) } 
+            }
             ?.sortedByDescending { it.lastModified() }
             ?.toMutableList() ?: mutableListOf()
         
@@ -84,7 +86,6 @@ class GaleriaActivity : AppCompatActivity() {
             adapter = GaleriaAdapter(listaFotos, 
                 onFotoClick = { posicion ->
                     val intent = Intent(this, VisorActivity::class.java)
-                    // Pasamos la lista de rutas para que el visor pueda hacer swipe (si lo configuraste)
                     val rutas = listaFotos.map { it.absolutePath }.toTypedArray()
                     intent.putExtra("lista_fotos", rutas)
                     intent.putExtra("posicion", posicion)
@@ -102,11 +103,8 @@ class GaleriaActivity : AppCompatActivity() {
         try {
             val nombreArchivo = "IMG_${System.currentTimeMillis()}.enc"
             val carpetaPrivada = File(getExternalFilesDir(null), "FotosSecretas")
-            if (!carpetaPrivada.exists()) carpetaPrivada.mkdirs()
-            
             val archivoDestino = File(carpetaPrivada, nombreArchivo)
 
-            // Usamos el CryptoManager para el proceso de cifrado
             contentResolver.openInputStream(uriOriginal)?.use { inputStream ->
                 FileOutputStream(archivoDestino).use { outputStream ->
                     cryptoManager.encrypt(inputStream, outputStream)
@@ -118,21 +116,18 @@ class GaleriaActivity : AppCompatActivity() {
             
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error al cifrar la imagen", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error al cifrar", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun borrarFotoDeBoveda(posicion: Int) {
         if (posicion !in listaFotos.indices) return
         val archivoABorrar = listaFotos[posicion]
-        
-        if (archivoABorrar.exists()) {
-            if (archivoABorrar.delete()) {
-                listaFotos.removeAt(posicion)
-                adapter.notifyItemRemoved(posicion)
-                adapter.notifyItemRangeChanged(posicion, listaFotos.size)
-                Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
-            }
+        if (archivoABorrar.exists() && archivoABorrar.delete()) {
+            listaFotos.removeAt(posicion)
+            adapter.notifyItemRemoved(posicion)
+            adapter.notifyItemRangeChanged(posicion, listaFotos.size)
+            Toast.makeText(this, "Eliminado", Toast.LENGTH_SHORT).show()
         }
     }
 
